@@ -1,1 +1,25 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>生成中…</title>
+</head>
+<body style="font-family: system-ui; padding: 24px;">
+  <h2>正在生成判断结果…</h2>
+  <p>约 3 秒后自动跳转。</p>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const rid = params.get("rid");
+    if (!rid) {
+      document.body.innerHTML = "<h2>缺少 rid</h2>";
+    } else {
+      setTimeout(() => {
+        location.href = `/result.html?rid=${encodeURIComponent(rid)}`;
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
 
