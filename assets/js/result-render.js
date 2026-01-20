@@ -93,7 +93,7 @@ function getR2Path() {
 
 // ⚠️ 这里假设你已把 R2 映射为 /packs/
 // 如果不是，改这一行即可
-const PACKS_BASE = "/shadow-packs/";
+const PACKS_BASE = "/api/shadow-packs/";
 
 // 拉取 pack 内 JSON
 async function fetchPackJson(r2_path, filename) {
