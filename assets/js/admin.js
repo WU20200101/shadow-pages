@@ -11,9 +11,8 @@ const DEFAULT_TEMPLATE =
 
 打开链接后输入验证码即可进入。`;
 
-function setStatus(text, kind = "muted") {
+function setStatus(text) {
   const el = $("status");
-  el.className = `status ${kind}`;
   el.textContent = text;
 }
 
@@ -37,7 +36,7 @@ async function copyToClipboard(text) {
 }
 
 function buildMessage(link, token) {
-  const tpl = $("msgTpl").value || DEFAULT_TEMPLATE;
+  const tpl = ($("msgTpl").value || DEFAULT_TEMPLATE);
   return tpl
     .replaceAll("{link}", link.trim())
     .replaceAll("{token}", token.trim());
@@ -47,6 +46,139 @@ function toggleButtons(enabled) {
   $("copyMsg").disabled = !enabled;
   $("copyToken").disabled = !enabled;
 }
+
+/** ========== Packs ========== **/
+
+function isActivePack(p) {
+  if (!p || typeof p !== "object") return false;
+  if (p.active === true) return true;
+  if (typeof p.status === "string" && p.status.toLowerCase() === "active") return true;
+  return false;
+}
+
+function getPackLabel(p) {
+  // 尽量给你一个稳定可读的 label
+  return (
+    p.label ||
+    p.name ||
+    p.title ||
+    `${p.form_key || p.formKey || "unknown"} / ${p.form_version || p.formVersion || "?"}`
+  );
+}
+
+function getPackFormKey(p) {
+  return p.form_key || p.formKey || p.key || "";
+}
+
+function getPackFormVersion(p) {
+  return p.form_version || p.formVersion || p.version || "";
+}
+
+function renderPacks(packs) {
+  const sel = $("packSelect");
+  sel.innerHTML = "";
+
+  const actives = (packs || []).filter(isActivePack);
+  if (!actives.length) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "（没有可用的 active pack）";
+    sel.appendChild(opt);
+    $("formKey").value = "";
+    $("formVersion").value = "";
+    return;
+  }
+
+  actives.forEach((p, idx) => {
+    const opt = document.createElement("option");
+    opt.value = String(idx);
+    opt.textContent = getPackLabel(p);
+    opt._pack = p; // 绑定对象
+    sel.appendChild(opt);
+  });
+
+  // 默认选择第一项
+  sel.selectedIndex = 0;
+  applySelectedPack();
+}
+
+function applySelectedPack() {
+  const sel = $("packSelect");
+  const opt = sel.options[sel.selectedIndex];
+  const p = opt && opt._pack;
+
+  $("formKey").value = p ? getPackFormKey(p) : "";
+  $("formVersion").value = p ? getPackFormVersion(p) : "";
+}
+
+async function fetchPacks() {
+  const base = $("base").value.trim();
+  const adminKey = $("key").value;
+
+  if (!base) throw new Error("Worker API Base 不能为空");
+  if (!adminKey) throw new Error("ADMIN KEY 不能为空（需要用它拉取 pack 列表）");
+
+  const res = await fetch(`${base}/api/admin/packs`, {
+    method: "GET",
+    headers: {
+      "X-ADMIN-KEY": adminKey
+    }
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("packs 返回不是 JSON：\n" + text);
+  }
+
+  // 兼容：可能是 {packs:[...]} 或直接 [...]
+  const packs = Array.isArray(data) ? data : (data.packs || data.data || []);
+  if (!Array.isArray(packs)) throw new Error("packs 数据格式不正确：\n" + text);
+
+  return packs;
+}
+
+/** ========== Token ========== **/
+
+async function requestToken() {
+  const base = $("base").value.trim();
+  const adminKey = $("key").value;
+  const form_key = $("formKey").value.trim();
+  const form_version = $("formVersion").value.trim();
+
+  if (!base) throw new Error("Worker API Base 不能为空");
+  if (!adminKey) throw new Error("ADMIN KEY 不能为空");
+  if (!form_key) throw new Error("form_key 为空（请先选择 pack）");
+  if (!form_version) throw new Error("form_version 为空（请先选择 pack）");
+
+  const res = await fetch(`${base}/api/admin/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-ADMIN-KEY": adminKey
+    },
+    body: JSON.stringify({ form_key, form_version })
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("token 返回不是 JSON：\n" + text);
+  }
+
+  if (!data.token) throw new Error("服务端返回缺少 token 字段");
+  return data.token;
+}
+
+/** ========== UI Init ========== **/
 
 function initTemplate() {
   const tplEl = $("msgTpl");
@@ -68,9 +200,9 @@ function initCopyButtons() {
     if (!msg || msg === "—") return;
     try {
       await copyToClipboard(msg);
-      setStatus("已复制：发送文案", "muted");
+      setStatus("已复制：发送文案");
     } catch (e) {
-      setStatus("复制失败：" + e.message, "muted");
+      setStatus("复制失败：" + e.message);
     }
   });
 
@@ -79,147 +211,11 @@ function initCopyButtons() {
     if (!token || token === "—") return;
     try {
       await copyToClipboard(token);
-      setStatus("已复制：验证码", "muted");
+      setStatus("已复制：验证码");
     } catch (e) {
-      setStatus("复制失败：" + e.message, "muted");
+      setStatus("复制失败：" + e.message);
     }
   });
-}
-
-// -----------------------
-// NEW: load packs -> dropdown
-// -----------------------
-async function fetchPacks() {
-  const base = $("base").value.trim();
-  const adminKey = $("key").value;
-
-  if (!base) throw new Error("Worker API Base 不能为空");
-  if (!adminKey) throw new Error("ADMIN KEY 不能为空（需要用它拉取 pack 列表）");
-
-  const res = await fetch(`${base}/api/admin/packs`, {
-    method: "GET",
-    headers: { "X-ADMIN-KEY": adminKey }
-  });
-
-  const text = await res.text();
-  if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
-
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error("packs 返回不是 JSON：\n" + text);
-  }
-
-  const packs = Array.isArray(data.packs) ? data.packs : [];
-  return packs.filter(p => p && p.active === true);
-}
-
-function fillPackSelect(packs) {
-  const sel = $("packSelect");
-  sel.innerHTML = "";
-
-  if (!packs.length) {
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "（没有可用的 active pack）";
-    sel.appendChild(opt);
-    $("formKey").value = "";
-    $("formVersion").value = "";
-    return;
-  }
-
-  for (const p of packs) {
-    const opt = document.createElement("option");
-    opt.value = `${p.form_key}@@${p.form_version}`;
-    opt.textContent = p.display_name || `${p.form_key} / ${p.form_version}`;
-    sel.appendChild(opt);
-  }
-
-  // 默认选第一个
-  sel.selectedIndex = 0;
-  syncSelectedPackToInputs();
-}
-
-function syncSelectedPackToInputs() {
-  const sel = $("packSelect");
-  const v = sel.value || "";
-  const [form_key, form_version] = v.split("@@");
-  $("formKey").value = form_key || "";
-  $("formVersion").value = form_version || "";
-}
-
-function initPackSelect() {
-  const sel = $("packSelect");
-  if (!sel) return;
-
-  sel.addEventListener("change", () => {
-    syncSelectedPackToInputs();
-    setStatus("已选择表单：" + ($("formKey").value || "-") + " / " + ($("formVersion").value || "-"));
-  });
-}
-
-async function initLoadPacksButtonless() {
-  // 在两种时机加载 packs：
-  // 1) 页面启动（如果 key 已填）
-  // 2) 当用户输入/粘贴 ADMIN KEY 后，自动尝试加载
-  async function tryLoad() {
-    try {
-      setStatus("加载表单列表中…");
-      const packs = await fetchPacks();
-      fillPackSelect(packs);
-      setStatus("表单列表已加载");
-    } catch (e) {
-      // 不阻塞：允许你以后加“手动输入”模式（目前 formKey/formVersion 是只读）
-      setStatus("表单列表加载失败：" + (e.message || String(e)));
-    }
-  }
-
-  // 启动先试一次（很多时候你已经把 key 粘好了）
-  await tryLoad();
-
-  // key 改变时再试
-  $("key").addEventListener("change", tryLoad);
-  $("base").addEventListener("change", tryLoad);
-}
-
-// -----------------------
-// token
-// -----------------------
-async function requestToken() {
-  const base = $("base").value.trim();
-  const adminKey = $("key").value;
-  const form_key = $("formKey").value.trim();
-  const form_version = $("formVersion").value.trim();
-
-  if (!base) throw new Error("Worker API Base 不能为空");
-  if (!adminKey) throw new Error("ADMIN KEY 不能为空");
-  if (!form_key) throw new Error("form_key 为空（请先选择表单）");
-  if (!form_version) throw new Error("form_version 为空（请先选择表单）");
-
-  const res = await fetch(`${base}/api/admin/token`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-ADMIN-KEY": adminKey
-    },
-    body: JSON.stringify({ form_key, form_version })
-  });
-
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(text);
-  }
-
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new Error("服务端返回不是 JSON：\n" + text);
-  }
-
-  if (!data.token) throw new Error("服务端返回缺少 token 字段");
-  return data.token;
 }
 
 function initGenerate() {
@@ -237,6 +233,7 @@ function initGenerate() {
       $("tokenOut").textContent = token;
       $("msgOut").textContent = msg;
 
+      // 默认自动复制“发送文案”
       await copyToClipboard(msg);
 
       toggleButtons(true);
@@ -245,18 +242,51 @@ function initGenerate() {
       $("tokenOut").textContent = "—";
       $("msgOut").textContent = "—";
       toggleButtons(false);
-      setStatus("失败：" + (e.message || String(e)));
+      setStatus("失败：" + e.message);
     }
   });
 }
 
-(async function boot() {
+function initPackSelect() {
+  $("packSelect").addEventListener("change", applySelectedPack);
+}
+
+function initAutoLoadPacks() {
+  // 设计原则：不偷偷请求。需要 admin key 才能拉 pack。
+  // 做法：当 key 输入完成并失焦，自动拉一次 pack 列表。
+  const keyEl = $("key");
+
+  let loading = false;
+  const load = async () => {
+    if (loading) return;
+    loading = true;
+    setStatus("拉取 pack 列表中…");
+    try {
+      const packs = await fetchPacks();
+      renderPacks(packs);
+      setStatus("就绪（pack 列表已加载）");
+    } catch (e) {
+      // 不阻塞你手工输入，但提示原因
+      setStatus("表单列表加载失败：" + e.message + "（需要用它拉取 pack 列表）");
+    } finally {
+      loading = false;
+    }
+  };
+
+  keyEl.addEventListener("blur", load);
+
+  // 如果你粘贴 key 后不点别处，也可以按 Enter 触发一次
+  keyEl.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter") load();
+  });
+}
+
+(function boot() {
   initTemplate();
   initToggleKey();
   initCopyButtons();
-  initPackSelect();
   initGenerate();
-
-  // NEW: 自动加载 packs
-  await initLoadPacksButtonless();
+  initPackSelect();
+  initAutoLoadPacks();
+  setStatus("就绪（输入 ADMIN KEY 后会自动拉取 pack 列表）");
 })();
