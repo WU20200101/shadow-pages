@@ -288,5 +288,22 @@ function initAutoLoadPacks() {
   initGenerate();
   initPackSelect();
   initAutoLoadPacks();
+
+  // ✅ 加在这里：绑定“刷新 packs”按钮
+  const reloadBtn = document.getElementById("reloadPacks");
+  if (reloadBtn) {
+    reloadBtn.addEventListener("click", async () => {
+      try {
+        setStatus("拉取 pack 列表中…");
+        const packs = await fetchPacks();
+        renderPacks(packs);
+        setStatus("就绪（pack 列表已加载）");
+      } catch (e) {
+        setStatus("表单列表加载失败：" + e.message);
+      }
+    });
+  }
+
   setStatus("就绪（输入 ADMIN KEY 后会自动拉取 pack 列表）");
 })();
+
