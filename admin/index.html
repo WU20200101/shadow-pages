@@ -1,1 +1,70 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/base.css" />
+  <title>生成验证码（Admin）</title>
+</head>
+<body>
+  <div class="page">
+    <h2>生成验证码（Admin）</h2>
+    <p class="muted">仅限登录后使用，请勿分享此页面。</p>
+
+    <label>Worker API Base</label>
+    <input id="base" value="https://shadow-api.wuxiaofei1985.workers.dev" />
+
+    <label>ADMIN KEY（不会保存）</label>
+    <input id="key" type="password" placeholder="输入 ADMIN_KEY" />
+
+    <label>form_key</label>
+    <input id="formKey" value="p1-11" />
+
+    <label>form_version</label>
+    <input id="formVersion" value="v2" />
+
+    <button id="go" class="primary">生成验证码</button>
+
+    <pre id="out" class="box"></pre>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    $("go").onclick = async () => {
+      $("out").textContent = "生成中…";
+
+      try {
+        const res = await fetch(
+          $("base").value + "/api/admin/token",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-ADMIN-KEY": $("key").value
+            },
+            body: JSON.stringify({
+              form_key: $("formKey").value,
+              form_version: $("formVersion").value
+            })
+          }
+        );
+
+        const text = await res.text();
+        if (!res.ok) throw new Error(text);
+
+        const data = JSON.parse(text);
+        $("out").textContent =
+          "验证码：\n\n" +
+          data.token +
+          "\n\n（已自动复制）";
+
+        navigator.clipboard.writeText(data.token);
+      } catch (e) {
+        $("out").textContent = "失败：\n" + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
 
