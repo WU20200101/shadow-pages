@@ -4,67 +4,139 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="/assets/css/base.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
   <title>生成验证码（Admin）</title>
 </head>
+
 <body>
-  <div class="page">
-    <h2>生成验证码（Admin）</h2>
-    <p class="muted">仅限登录后使用，请勿分享此页面。</p>
+  <div class="admin-shell">
+    <div class="admin-wrap">
 
-    <label>Worker API Base</label>
-    <input id="base" value="https://shadow-api.wuxiaofei1985.workers.dev" />
+      <!-- 左侧：主卡片 -->
+      <section class="card main-card">
+        <header class="card-header">
+          <div class="brand">
+            <div class="brand-dot"></div>
+            <div>
+              <div class="brand-title">Admin Console</div>
+              <div class="brand-sub">生成一次性验证码 + 发送文案</div>
+            </div>
+          </div>
 
-    <label>ADMIN KEY（不会保存）</label>
-    <input id="key" type="password" placeholder="输入 ADMIN_KEY" />
+          <div class="hint">
+            <div class="hint-title">注意</div>
+            <div class="hint-text">仅限你本人使用，请勿分享此页面或 ADMIN KEY。</div>
+          </div>
+        </header>
 
-    <label>form_key</label>
-    <input id="formKey" value="p1-11" />
+        <div class="card-body">
+          <div class="grid">
+            <div class="field">
+              <label for="base">Worker API Base</label>
+              <input id="base" value="https://shadow-api.wuxiaofei1985.workers.dev" />
+              <div class="help">例：https://xxx.workers.dev</div>
+            </div>
 
-    <label>form_version</label>
-    <input id="formVersion" value="v2" />
+            <div class="field">
+              <label for="key">ADMIN KEY（不会保存）</label>
+              <div class="input-row">
+                <input id="key" type="password" placeholder="输入 ADMIN_KEY" autocomplete="off" />
+                <button id="toggleKey" class="ghost" type="button" aria-label="显示/隐藏">显示</button>
+              </div>
+              <div class="help">请求头：X-ADMIN-KEY</div>
+            </div>
 
-    <button id="go" class="primary">生成验证码</button>
+            <div class="field">
+              <label for="formKey">form_key</label>
+              <input id="formKey" value="p1-11" />
+              <div class="help">用于区分不同表单</div>
+            </div>
 
-    <pre id="out" class="box"></pre>
+            <div class="field">
+              <label for="formVersion">form_version</label>
+              <input id="formVersion" value="v2" />
+              <div class="help">用于灰度/版本兼容</div>
+            </div>
+
+            <div class="field">
+              <label for="enterUrl">用户入口链接（发送给客户）</label>
+              <input id="enterUrl" value="https://shadow-pages.pages.dev/enter" />
+              <div class="help">会自动写入发送文案</div>
+            </div>
+
+            <div class="field">
+              <label for="msgTpl">发送文案模板（可改）</label>
+              <textarea id="msgTpl" rows="4"></textarea>
+              <div class="help">支持占位符：{link} / {token}</div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="go" class="primary" type="button">
+              <span class="btn-dot" aria-hidden="true"></span>
+              生成验证码并复制发送文案
+            </button>
+
+            <button id="copyMsg" class="secondary" type="button" disabled>
+              仅复制发送文案
+            </button>
+
+            <button id="copyToken" class="secondary" type="button" disabled>
+              仅复制验证码
+            </button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="result-title">验证码</div>
+              <pre id="tokenOut" class="mono box">—</pre>
+            </div>
+
+            <div class="result-card">
+              <div class="result-title">可直接发给客户的文本</div>
+              <pre id="msgOut" class="mono box">—</pre>
+            </div>
+          </div>
+
+          <div id="status" class="status muted">就绪</div>
+        </div>
+      </section>
+
+      <!-- 右侧：装饰/信息卡（更像你那张 UI 图的布局） -->
+      <aside class="card side-card">
+        <div class="side-hero">
+          <div class="side-hero-badge">Shadow · Admin</div>
+          <div class="side-hero-title">Token Generator</div>
+          <div class="side-hero-sub">
+            一键生成 + 自动拼接文案 + 自动复制到剪贴板
+          </div>
+        </div>
+
+        <div class="side-list">
+          <div class="side-item">
+            <div class="side-k">默认动作</div>
+            <div class="side-v">点击按钮后：生成 token → 拼接文案 → 复制文案</div>
+          </div>
+          <div class="side-item">
+            <div class="side-k">失败时</div>
+            <div class="side-v">会显示服务端原始错误文本，方便你定位</div>
+          </div>
+          <div class="side-item">
+            <div class="side-k">安全提示</div>
+            <div class="side-v">ADMIN KEY 不落盘；页面刷新即消失</div>
+          </div>
+        </div>
+
+        <div class="side-footer muted">
+          UI 风格：简洁圆角 + 蓝色渐变卡片（对齐你第一张图的审美）
+        </div>
+      </aside>
+
+    </div>
   </div>
 
-  <script>
-    const $ = id => document.getElementById(id);
-
-    $("go").onclick = async () => {
-      $("out").textContent = "生成中…";
-
-      try {
-        const res = await fetch(
-          $("base").value + "/api/admin/token",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-ADMIN-KEY": $("key").value
-            },
-            body: JSON.stringify({
-              form_key: $("formKey").value,
-              form_version: $("formVersion").value
-            })
-          }
-        );
-
-        const text = await res.text();
-        if (!res.ok) throw new Error(text);
-
-        const data = JSON.parse(text);
-        $("out").textContent =
-          "验证码：\n\n" +
-          data.token +
-          "\n\n（已自动复制）";
-
-        navigator.clipboard.writeText(data.token);
-      } catch (e) {
-        $("out").textContent = "失败：\n" + e.message;
-      }
-    };
-  </script>
+  <script src="/assets/js/admin.js"></script>
 </body>
 </html>
-
