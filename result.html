@@ -1,1 +1,49 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>判断结果</title>
+</head>
+<body style="font-family: system-ui; padding: 24px;">
+  <h2>判断结果</h2>
+  <div id="app">加载中…</div>
+
+  <script>
+    const app = document.getElementById("app");
+    const params = new URLSearchParams(location.search);
+    const rid = params.get("rid");
+
+    async function main() {
+      if (!rid) { app.textContent = "缺少 rid"; return; }
+
+      const resp = await fetch(`https://shadow-api.wuxiaofei1985.workers.dev/api/result/${encodeURIComponent(rid)}`);
+      if (!resp.ok) { app.textContent = "结果未找到 / 读取失败"; return; }
+
+      const data = await resp.json();
+      const blocks = data?.client_result?.blocks || [];
+
+      if (!blocks.length) {
+        app.innerHTML = "<p>本次没有命中任何高风险信号。</p>";
+        return;
+      }
+
+      app.innerHTML = blocks.map(b => `
+        <section style="border:1px solid #ddd; padding:16px; border-radius:12px; margin:12px 0;">
+          <h3 style="margin:0 0 8px 0;">${escapeHtml(b.title || "")}</h3>
+          ${(b.body || []).map(line => `<p style="margin:6px 0;">${escapeHtml(line)}</p>`).join("")}
+        </section>
+      `).join("");
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    main();
+  </script>
+</body>
+</html>
 
