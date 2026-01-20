@@ -11,60 +11,47 @@
     <h2>输入验证码</h2>
     <p class="muted">请输入你收到的验证码（例如：MHCE-D684）</p>
 
-    <input
-      id="token"
-      type="text"
-      placeholder="XXXX-XXXX"
-      style="text-transform:uppercase"
-    />
-
+    <input id="token" type="text" placeholder="XXXX-XXXX" style="text-transform:uppercase" />
     <div style="height:10px"></div>
-
     <button id="go" class="primary">进入</button>
 
     <p id="msg" class="muted"></p>
   </div>
 
   <script type="module">
-    const API_BASE = "https://shadow-api.wuxiaofei1985.workers.dev";
+    import { apiPost } from "/assets/js/api.js";
 
     const tokenEl = document.getElementById("token");
     const msg = document.getElementById("msg");
     const btn = document.getElementById("go");
 
-    tokenEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") btn.click();
-    });
+    tokenEl.addEventListener("keydown", (e) => { if (e.key === "Enter") btn.click(); });
 
     btn.addEventListener("click", async () => {
       const token = (tokenEl.value || "").trim().toUpperCase();
-      if (!token) {
-        msg.textContent = "请输入验证码";
-        return;
-      }
+      if (!token) { msg.textContent = "请输入验证码"; return; }
 
       btn.disabled = true;
       msg.textContent = "校验中…";
 
       try {
-        const resp = await fetch(`${API_BASE}/api/enter`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token })
-        });
+        const data = await apiPost("/api/enter", { token });
 
-        if (!resp.ok) {
-          const text = await resp.text();
-          throw new Error(text || "验证码校验失败");
+        // used token -> 直接去结果页
+        if (data?.status === "used" && data?.result_id) {
+          window.location.href = `/result?rid=${encodeURIComponent(data.result_id)}`;
+          return;
         }
 
-        const data = await resp.json();
+        // ok -> 进入填表
+        if (data?.status === "ok" && data?.schema) {
+          sessionStorage.setItem("token", token);
+          sessionStorage.setItem("enter_payload", JSON.stringify(data));
+          window.location.href = "/form";
+          return;
+        }
 
-        // 只在本次会话有效
-        sessionStorage.setItem("token", token);
-        sessionStorage.setItem("enter_payload", JSON.stringify(data));
-
-        window.location.href = "/form.html";
+        msg.textContent = "校验失败：返回数据异常";
       } catch (e) {
         msg.textContent = e.message || "校验失败";
       } finally {
