@@ -3,23 +3,42 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/base.css" />
   <title>生成中…</title>
 </head>
-<body style="font-family: system-ui; padding: 24px;">
-  <h2>正在生成判断结果…</h2>
-  <p>约 3 秒后自动跳转。</p>
+<body>
+  <div class="page">
+    <h2>正在生成判断结果</h2>
+    <p class="muted">
+      系统正在整理你的填写内容，请稍候…
+    </p>
+
+    <div style="margin-top:24px">
+      <p id="countdown" class="muted">预计等待 3 秒</p>
+    </div>
+  </div>
 
   <script>
-    const params = new URLSearchParams(location.search);
+    const params = new URLSearchParams(window.location.search);
     const rid = params.get("rid");
+
     if (!rid) {
-      document.body.innerHTML = "<h2>缺少 rid</h2>";
-    } else {
-      setTimeout(() => {
-        location.href = `/result.html?rid=${encodeURIComponent(rid)}`;
-      }, 3000);
+      document.body.innerHTML = "<p>缺少 result_id</p>";
+      throw new Error("missing rid");
     }
+
+    let remain = 3;
+    const el = document.getElementById("countdown");
+
+    const timer = setInterval(() => {
+      remain--;
+      if (remain <= 0) {
+        clearInterval(timer);
+        window.location.href = `/result.html?rid=${encodeURIComponent(rid)}`;
+      } else {
+        el.textContent = `预计等待 ${remain} 秒`;
+      }
+    }, 1000);
   </script>
 </body>
 </html>
-
