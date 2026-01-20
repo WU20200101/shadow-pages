@@ -47,16 +47,19 @@
             </div>
 
             <div class="field">
-              <label for="formKey">form_key</label>
-              <input id="formKey" value="p1-11" />
-              <div class="help">用于区分不同表单</div>
-            </div>
+  <label for="packSelect">选择表单（pack）</label>
+  <select id="packSelect"></select>
+  <div class="help">来自 Worker /api/admin/packs（只显示 active 的 pack）</div>
+</div>
 
-            <div class="field">
-              <label for="formVersion">form_version</label>
-              <input id="formVersion" value="v2" />
-              <div class="help">用于灰度/版本兼容</div>
-            </div>
+<div class="field">
+  <label>当前选择</label>
+  <div class="input-row">
+    <input id="formKey" placeholder="form_key" readonly />
+    <input id="formVersion" placeholder="form_version" readonly />
+  </div>
+  <div class="help">只读显示（由下拉自动填充）</div>
+</div>
 
             <div class="field">
               <label for="enterUrl">用户入口链接（发送给客户）</label>
