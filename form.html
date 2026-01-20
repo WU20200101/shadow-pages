@@ -1,1 +1,60 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/base.css" />
+  <title>填写表单</title>
+</head>
+<body>
+  <div class="page">
+    <h2 id="title">填写表单</h2>
+    <p class="muted" id="sub">请按直觉填写，不需要解释。</p>
+
+    <div id="form"></div>
+
+    <div style="height:16px"></div>
+    <button id="submit" class="primary">提交</button>
+    <p id="msg" class="muted"></p>
+  </div>
+
+  <script type="module">
+    import { renderForm } from "/assets/js/form-render.js";
+    import { submitFlow } from "/assets/js/submit.js";
+
+    const msg = document.getElementById("msg");
+    const btn = document.getElementById("submit");
+    const formBox = document.getElementById("form");
+
+    const token = sessionStorage.getItem("token");
+    const enterPayloadRaw = sessionStorage.getItem("enter_payload");
+
+    if (!token || !enterPayloadRaw) {
+      location.href = "/enter.html";
+    }
+
+    let enterPayload;
+    try { enterPayload = JSON.parse(enterPayloadRaw); } catch {}
+
+    const schema = enterPayload?.schema;
+    const formKey = enterPayload?.form_key;
+    const formVersion = enterPayload?.form_version;
+
+    document.getElementById("title").textContent = `表单：${formKey || ""} ${formVersion || ""}`.trim();
+
+    renderForm(formBox, schema);
+
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      msg.textContent = "提交中…";
+      try {
+        await submitFlow({ token, schema });
+      } catch (e) {
+        msg.textContent = e.message || "提交失败";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
 
