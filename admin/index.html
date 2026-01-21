@@ -24,6 +24,7 @@
             <div class="row">
               <input id="key" type="password" placeholder="请输入管理员密码" autocomplete="off" />
               <button id="toggleKey" class="btn btn--muted" type="button">显示密码</button>
+              <button id="confirmKey" class="btn btn--primary" type="button">确认</button>
             </div>
           </div>
 
@@ -36,7 +37,7 @@
             <label>验证码</label>
             <div class="row">
               <input id="tokenOutInput" readonly placeholder="" />
-              <button id="go" class="btn btn--primary" type="button">生成验证码</button>
+              <button id="go" class="btn btn--primary" type="button" disabled>生成验证码</button>
             </div>
           </div>
 
@@ -51,8 +52,8 @@
           <div class="field">
             <label>选择表单</label>
             <div class="row">
-              <select id="packSelect"></select>
-              <button id="reloadPacks" class="btn btn--muted" type="button">刷新列表</button>
+              <select id="packSelect" disabled></select>
+              <button id="reloadPacks" class="btn btn--muted" type="button" disabled>刷新列表</button>
             </div>
           </div>
 
@@ -60,7 +61,7 @@
             <label>版本号（只读）</label>
             <div class="row">
               <input id="formVersion" readonly placeholder="" />
-              <button id="lockPack" class="btn btn--muted" type="button">确认并锁定表单</button>
+              <button id="lockPack" class="btn btn--muted" type="button" disabled>确认并锁定表单</button>
             </div>
           </div>
 
@@ -76,7 +77,7 @@
           <button id="copyToken" class="btn btn--darkwide" type="button" disabled>复制验证码</button>
           <button id="copyMsg" class="btn btn--darkwide" type="button" disabled>复制发送文案</button>
         </div>
-        <div id="status" class="status">就绪：先输入管理员密码 → 刷新列表 → 选择表单 → 锁定 → 生成</div>
+        <div id="status" class="status">就绪：输入管理员密码后点击「确认」</div>
       </div>
     </section>
 
@@ -108,10 +109,10 @@
       </div>
     </section>
 
-    <!-- 隐藏配置（可按需改默认 base） -->
+    <!-- 隐藏配置 -->
     <input id="base" type="hidden" value="https://shadow-api.wuxiaofei1985.workers.dev" />
 
-    <!-- 文案模板（占位符：{link} / {token}） -->
+    <!-- 文案模板 -->
     <textarea id="msgTpl" class="sr-only">
 你好，这里是你的入口与验证码：
 
