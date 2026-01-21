@@ -258,6 +258,11 @@ body{
   width:auto !important;
 }
 
+.row--key .spacer{
+  flex:0 0 12px;
+}
+
+
 
 /* ✅ 手机端：变成纵向步骤（你截图那种） */
 @media (max-width: 820px){
