@@ -119,9 +119,10 @@ body{
   font-size: 13px;
   cursor:pointer;
   white-space: nowrap;
+  transition: opacity .12s ease;
 }
 .btn:disabled{
-  opacity:.5;
+  opacity:.45;
   cursor:not-allowed;
 }
 
