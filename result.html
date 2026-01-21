@@ -4,23 +4,40 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="/assets/css/base.css" />
+  <link rel="stylesheet" href="/assets/css/result.css" />
   <title>判断结果</title>
 </head>
 <body>
-  <div class="page">
-    <h2>判断结果</h2>
-    <p class="muted">
-      以下内容为结构化判断呈现，不构成任何行动建议。
-    </p>
-
-    <div id="result"></div>
-
-    <div style="margin-top:24px">
-      <p class="muted">
-        本结果仅对应本次填写，不会因再次访问而变化。
-      </p>
+  <!-- topbar -->
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="topbar__title">判断结果</div>
     </div>
-  </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="stack">
+        <!-- info -->
+        <section class="card card--info">
+          <div class="info__title">说明</div>
+          <p class="muted">
+            以下内容为结构化判断呈现，不构成任何行动建议。
+          </p>
+        </section>
+
+        <!-- result -->
+        <div id="result" class="result"></div>
+
+        <!-- footer note -->
+        <section class="card card--info">
+          <p class="muted">
+            本结果仅对应本次填写，不会因再次访问而变化。
+          </p>
+        </section>
+      </div>
+    </section>
+  </main>
 
   <script type="module">
     import { apiGet } from "/assets/js/api.js";
@@ -31,19 +48,28 @@
     const box = document.getElementById("result");
 
     if (!rid) {
-      box.innerHTML = "<p>缺少 result_id</p>";
+      box.innerHTML = "<section class='card'><p>缺少 result_id</p></section>";
       throw new Error("missing rid");
     }
 
-    box.innerHTML = "<p class='muted'>加载中…</p>";
+    box.innerHTML = `
+      <section class="card">
+        <div class="loading">
+          <div class="spinner" aria-hidden="true"></div>
+          <div class="loading__text muted">加载中…</div>
+        </div>
+      </section>
+    `;
 
     try {
       const data = await apiGet(`/api/result/${encodeURIComponent(rid)}`);
       renderResult(box, data);
     } catch (e) {
       box.innerHTML = `
-        <p>结果加载失败</p>
-        <pre class="muted">${e.message || "unknown error"}</pre>
+        <section class="card">
+          <h3 class="card__title">结果加载失败</h3>
+          <pre class="muted pre">${(e && (e.message || e.toString())) || "unknown error"}</pre>
+        </section>
       `;
     }
   </script>
