@@ -1,5 +1,7 @@
-// assets/js/admin.js
 const $ = (id) => document.getElementById(id);
+
+/** ✅ 这里写死 Worker API Base（不再在页面展示） */
+const API_BASE = "https://shadow-api.wuxiaofei1985.workers.dev";
 
 const HISTORY_KEY = "shadow_admin_issue_history_v1";
 const HISTORY_LIMIT = 200;
@@ -30,7 +32,7 @@ async function copyToClipboard(text) {
 function nowText() {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 /** ================== 状态机（严格门控） ==================
@@ -45,21 +47,21 @@ let lockedPack = null;   // { display_name, form_key, form_version }
 let packsCache = [];     // 最近一次拉到的 active packs
 
 function applyGate() {
-  // step 0
+  // step 0 -> 1
   $("reloadPacks").disabled = !(step >= 1);
   $("packSelect").disabled = !(step >= 1);
 
-  // 锁定按钮：必须选到一个 pack（step>=2）
+  // step 2 才能锁定
   $("lockPack").disabled = !(step >= 2);
 
-  // 生成按钮：必须锁定（step>=3）
+  // step 3 才能生成
   $("go").disabled = !(step >= 3);
 
-  // 复制按钮：必须生成成功（step>=4）
+  // step 4 才能复制
   $("copyToken").disabled = !(step >= 4);
   $("copyMsg").disabled = !(step >= 4);
 
-  // 选择/刷新在锁定后不可操作
+  // 锁定后：不允许刷新/选择
   if (step >= 3) {
     $("reloadPacks").disabled = true;
     $("packSelect").disabled = true;
@@ -67,7 +69,6 @@ function applyGate() {
 }
 
 function resetAfterKeyConfirm() {
-  // 密码确认后：清空所有“后置状态”
   lockedPack = null;
   step = 1;
 
@@ -76,7 +77,6 @@ function resetAfterKeyConfirm() {
   $("formName").value = "";
   $("formVersion").value = "";
 
-  // packSelect 先清空占位
   const sel = $("packSelect");
   sel.innerHTML = "";
   const opt = document.createElement("option");
@@ -85,11 +85,10 @@ function resetAfterKeyConfirm() {
   sel.appendChild(opt);
 
   packsCache = [];
-
   applyGate();
 }
 
-/** ========== packs (KV: /api/admin/packs) ========== **/
+/** ========== packs ========== **/
 
 function isActivePack(p) {
   if (!p || typeof p !== "object") return false;
@@ -107,19 +106,17 @@ function getPackFormVersion(p) {
 }
 
 function getPackDisplayName(p) {
-  // 必须使用 KV display_name
+  // ✅ 必须使用 KV display_name
   return (p.display_name || p.displayName || "").toString().trim();
 }
 
 async function fetchPacks() {
-  const base = $("base").value.trim();
   const adminKey = $("key").value;
-
   if (!adminKey) throw new Error("管理员密码不能为空");
 
-  const res = await fetch(`${base}/api/admin/packs`, {
+  const res = await fetch(`${API_BASE}/api/admin/packs`, {
     method: "GET",
-    headers: { "X-ADMIN-KEY": adminKey }
+    headers: { "X-ADMIN-KEY": adminKey },
   });
 
   const text = await res.text();
@@ -146,9 +143,10 @@ function renderPacks(packs) {
     opt.value = "";
     opt.textContent = "（没有可用的 active 表单）";
     sel.appendChild(opt);
+
     $("formName").value = "";
     $("formVersion").value = "";
-    step = Math.max(step, 1); // 仍停留在可刷新状态
+    step = Math.max(step, 1);
     applyGate();
     return;
   }
@@ -157,17 +155,17 @@ function renderPacks(packs) {
     const display = getPackDisplayName(p) || `${getPackFormKey(p)}:${getPackFormVersion(p)}`;
     const opt = document.createElement("option");
     opt.value = String(idx);
-    opt.textContent = display; // 下拉显示 display_name
+    opt.textContent = display; // ✅ 下拉显示中文名
     sel.appendChild(opt);
   });
 
-  // 默认不自动锁定，只是“选中第一项”
   sel.selectedIndex = 0;
   applySelectedPack();
 }
 
 function applySelectedPack() {
-  if (step < 1) return; // 未确认管理员密码，不允许选择
+  if (step < 1) return;      // 未确认管理员密码，不允许选择
+  if (step >= 3) return;     // 锁定后不允许变化
 
   const sel = $("packSelect");
   const idx = Number(sel.value);
@@ -184,13 +182,11 @@ function applySelectedPack() {
   $("formName").value = getPackDisplayName(p) || "";
   $("formVersion").value = getPackFormVersion(p) || "";
 
-  // 选到表单才进入 step 2
   step = 2;
   applyGate();
 }
 
 /** ========== lock pack ========== **/
-
 function lockCurrentPack() {
   if (step < 2) throw new Error("请先选择表单");
 
@@ -215,24 +211,22 @@ function lockCurrentPack() {
 }
 
 /** ========== token ========== **/
-
 async function requestToken() {
-  const base = $("base").value.trim();
   const adminKey = $("key").value;
 
   if (!adminKey) throw new Error("管理员密码不能为空");
   if (step < 3 || !lockedPack) throw new Error("请先锁定表单");
 
-  const res = await fetch(`${base}/api/admin/token`, {
+  const res = await fetch(`${API_BASE}/api/admin/token`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-ADMIN-KEY": adminKey
+      "X-ADMIN-KEY": adminKey,
     },
     body: JSON.stringify({
       form_key: lockedPack.form_key,
-      form_version: lockedPack.form_version
-    })
+      form_version: lockedPack.form_version,
+    }),
   });
 
   const text = await res.text();
@@ -246,10 +240,9 @@ async function requestToken() {
   return data.token;
 }
 
-/** ========== message ========== **/
-
+/** ========== message（模板后台固定，不给页面编辑） ========== **/
 function buildMessage(link, token) {
-  const tpl = ($("msgTpl").value || "").trim() ||
+  const tpl =
 `你好，这里是你的入口与验证码：
 
 入口链接：
@@ -266,7 +259,6 @@ function buildMessage(link, token) {
 }
 
 /** ========== history (localStorage) ========== **/
-
 function loadHistory() {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
@@ -320,7 +312,7 @@ function renderHistory() {
       <td>${esc(it.display_name)}</td>
       <td>${esc(it.form_version)}</td>
       <td>
-        <button class="btn btn--muted btn--small" data-copy="${idx}" type="button">复制</button>
+        <button class="btn btn--primary btn--small" data-copy="${idx}" type="button">复制</button>
       </td>
     </tr>
   `).join("");
@@ -341,7 +333,6 @@ function renderHistory() {
 }
 
 /** ========== init ========== **/
-
 function initToggleKey() {
   $("toggleKey").addEventListener("click", () => {
     const input = $("key");
@@ -353,7 +344,7 @@ function initToggleKey() {
 
 function initConfirmKey() {
   $("confirmKey").addEventListener("click", () => {
-    const key = ($("key").value || "").trim();
+    const key = $("key").value;
     if (!key) {
       setStatus("请先输入管理员密码，再点击确认");
       return;
@@ -382,8 +373,6 @@ function initReloadPacks() {
 
 function initPackSelect() {
   $("packSelect").addEventListener("change", () => {
-    if (step < 1) return;
-    if (step >= 3) return; // 锁定后不允许再变
     applySelectedPack();
   });
 }
@@ -408,8 +397,9 @@ function initGenerate() {
     // 清空旧输出
     $("tokenOutInput").value = "";
     $("msgOut").value = "";
-    $("copyToken").disabled = true;
-    $("copyMsg").disabled = true;
+
+    step = 3;
+    applyGate();
 
     setStatus("生成中…");
 
@@ -417,12 +407,9 @@ function initGenerate() {
       const token = await requestToken();
       $("tokenOutInput").value = token;
 
-      const link = ($("enterUrl").value || "").trim();
+      const link = $("enterUrl").value.trim();
       const msg = buildMessage(link, token);
       $("msgOut").value = msg;
-
-      // 默认：生成后立刻复制文案
-      await copyToClipboard(msg);
 
       // 写入历史（名称用 KV display_name）
       addHistoryItem({
@@ -430,13 +417,14 @@ function initGenerate() {
         issued_at: nowText(),
         display_name: lockedPack ? lockedPack.display_name : "",
         form_key: lockedPack ? lockedPack.form_key : "",
-        form_version: lockedPack ? lockedPack.form_version : ""
+        form_version: lockedPack ? lockedPack.form_version : "",
       });
 
+      // 生成后允许复制
       step = 4;
       applyGate();
 
-      setStatus("成功：已生成验证码并复制文案（历史已记录）");
+      setStatus("成功：已生成验证码（历史已记录）");
     } catch (e) {
       setStatus("失败：" + e.message);
     }
@@ -446,7 +434,7 @@ function initGenerate() {
 function initCopyButtons() {
   $("copyToken").addEventListener("click", async () => {
     if (step < 4) return;
-    const token = ($("tokenOutInput").value || "").trim();
+    const token = $("tokenOutInput").value.trim();
     if (!token) return;
     try {
       await copyToClipboard(token);
@@ -458,11 +446,11 @@ function initCopyButtons() {
 
   $("copyMsg").addEventListener("click", async () => {
     if (step < 4) return;
-    const msg = $("msgOut").value || "";
+    const msg = $("msgOut").value;
     if (!msg.trim()) return;
     try {
       await copyToClipboard(msg);
-      setStatus("已复制文案模板");
+      setStatus("已复制发送文案");
     } catch (e) {
       setStatus("复制失败：" + e.message);
     }
@@ -486,15 +474,13 @@ function initCopyButtons() {
 }
 
 (function boot() {
-  // 历史先渲染
   renderHistory();
 
-  // 初始状态：step=0
   step = 0;
   lockedPack = null;
   packsCache = [];
 
-  // 初始 pack 下拉占位
+  // pack 下拉占位
   const sel = $("packSelect");
   sel.innerHTML = "";
   const opt = document.createElement("option");
