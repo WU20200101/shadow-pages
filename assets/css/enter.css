@@ -64,7 +64,7 @@ body{
 }
 
 .panel__headerSub{
-  font-size:13px;
+  font-size:14px;
   color: var(--muted);
   line-height:1.6;
 }
@@ -76,7 +76,7 @@ body{
 .label{
   display:block;
   font-weight:700;
-  font-size:13px;
+  font-size:17px;
   margin-bottom:8px;
 }
 
@@ -100,7 +100,7 @@ body{
 
 .help{
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   line-height: 1.6;
 }
@@ -117,7 +117,7 @@ body{
   background:#fff;
   color: var(--ink);
   font-weight:800;
-  font-size:14px;
+  font-size:17px;
   cursor:pointer;
 }
 
@@ -134,6 +134,6 @@ body{
 
 .status{
   margin-top: 10px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
