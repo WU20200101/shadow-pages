@@ -4,27 +4,52 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="/assets/css/base.css" />
+  <link rel="stylesheet" href="/assets/css/form.css" />
   <title>填写表单</title>
 </head>
+
 <body>
-  <div class="page">
-    <h2 id="title">填写表单</h2>
-    <p class="muted" id="sub">请按直觉填写，不需要解释。</p>
+  <header class="topbar">
+    <div class="topbar__title" id="topTitle">风险评估表单</div>
+  </header>
 
-    <div id="form"></div>
+  <main class="container">
+    <section class="panel">
+      <div class="panel__header">
+        <div class="panel__headerTitle" id="title">填写表单</div>
+        <div class="panel__headerSub" id="sub">请按直觉填写，不需要解释。</div>
+      </div>
 
-    <div style="height:16px"></div>
-    <button id="submit" class="primary">提交</button>
-    <p id="msg" class="muted"></p>
-  </div>
+      <div class="panel__body">
+        <div class="progress">
+          <div class="progress__bar"><div id="bar" class="progress__fill"></div></div>
+          <div id="stepText" class="progress__text">—</div>
+        </div>
+
+        <div id="stage"></div>
+
+        <div class="divider"></div>
+
+        <div class="actions">
+          <button id="next" class="btn btn--primary" type="button">下一步</button>
+        </div>
+
+        <div id="msg" class="status">就绪</div>
+      </div>
+    </section>
+
+    <!-- 用于“回灌答案后再提交”的隐藏容器（submit.js 会从 document 里读） -->
+    <div id="hiddenForm" class="sr-only"></div>
+  </main>
 
   <script type="module">
-    import { renderForm } from "/assets/js/form-render.js";
     import { submitFlow } from "/assets/js/submit.js";
+    import { createWizardDom } from "/assets/js/form-wizard-dom.js";
 
     const msg = document.getElementById("msg");
-    const btn = document.getElementById("submit");
-    const formBox = document.getElementById("form");
+    const nextBtn = document.getElementById("next");
+    const stage = document.getElementById("stage");
+    const hiddenForm = document.getElementById("hiddenForm");
 
     const token = sessionStorage.getItem("token");
     const enterPayloadRaw = sessionStorage.getItem("enter_payload");
@@ -37,24 +62,53 @@
     try { enterPayload = JSON.parse(enterPayloadRaw); } catch {}
 
     const schema = enterPayload?.schema;
-    const formKey = enterPayload?.form_key;
-    const formVersion = enterPayload?.form_version;
+    const displayName =
+      enterPayload?.display_name ||
+      enterPayload?.pack?.display_name ||
+      sessionStorage.getItem("display_name") ||
+      "风险评估表单";
 
-    document.getElementById("title").textContent = `表单：${formKey || ""} ${formVersion || ""}`.trim();
+    // 顶部标题改为“表单中文名”
+    document.getElementById("topTitle").textContent = displayName;
+    document.getElementById("title").textContent = displayName;
 
-    renderForm(formBox, schema);
+    // 禁止浏览器返回（避免“退回上一题/上一页”）
+    history.pushState({ lock: true }, "");
+    window.addEventListener("popstate", () => history.pushState({ lock: true }, ""));
 
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      msg.textContent = "提交中…";
+    const wiz = createWizardDom({
+      mount: stage,
+      schema,
+      displayName,
+      setStatus: (t) => msg.textContent = t,
+      onUI: ({ nextText, progressText, progressRatio }) => {
+        nextBtn.textContent = nextText;
+        document.getElementById("stepText").textContent = progressText;
+        document.getElementById("bar").style.width = `${Math.round(progressRatio * 100)}%`;
+      }
+    });
+
+    nextBtn.addEventListener("click", async () => {
       try {
+        const r = wiz.next(); // { done, canSubmit, answers }
+        if (!r.done) return;
+
+        // done：已到最后一步（提交页）
+        // 把内存答案回灌成“原 renderForm 的 DOM 结构”，让 submitFlow 原封不动工作
+        hiddenForm.innerHTML = "";
+        wiz.materializeTo(hiddenForm);
+
+        nextBtn.disabled = true;
+        msg.textContent = "提交中…";
+
         await submitFlow({ token, schema });
+
+        // submitFlow 会跳 waiting.html
       } catch (e) {
-        msg.textContent = e.message || "提交失败";
-        btn.disabled = false;
+        msg.textContent = e?.message || "操作失败";
+        nextBtn.disabled = false;
       }
     });
   </script>
 </body>
 </html>
-
