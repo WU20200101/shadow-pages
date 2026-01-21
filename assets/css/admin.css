@@ -107,21 +107,24 @@ body{
   gap:12px;
   align-items:center;
 }
-/* 管理员密码：输入框 + 显示密码按钮 */
+/* 管理员密码：输入 + 显示密码 */
 .row--key {
-  display: flex;
+  display: flex !important;
   align-items: center;
-  gap: 50px;              /* 👈 关键：这里补间距 */
+  gap: 12px;
 }
 
 .row--key .input {
   flex: 1;
+  width: auto !important;
   min-width: 0;
 }
 
-.row--key .btn {
-  white-space: nowrap;   /* 防止「显示密码」被挤成两行 */
+#toggleKey {
+  white-space: nowrap;
+  position: static;
 }
+
 
 .row--two{
   display:grid;
