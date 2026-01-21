@@ -5,172 +5,126 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="/assets/css/base.css" />
   <link rel="stylesheet" href="/assets/css/admin.css" />
-  <title>Admin Console · Token</title>
+  <title>风险评估系统验证码生成器</title>
 </head>
 
 <body>
-  <!-- Top Bar -->
   <header class="topbar">
-    <div class="topbar__left">
-      <div class="logo">
-        <span class="logo__dot"></span>
-        <span class="logo__text">Shadow Admin</span>
-      </div>
-      <nav class="topnav">
-        <a class="topnav__item is-active" href="javascript:void(0)">Token</a>
-        <a class="topnav__item" href="javascript:void(0)" aria-disabled="true">Packs</a>
-        <a class="topnav__item" href="javascript:void(0)" aria-disabled="true">Logs</a>
-      </nav>
-    </div>
-
-    <div class="topbar__right">
-      <span class="pill">严谨模式</span>
-      <button id="toggleKey" class="btn btn--ghost" type="button">显示</button>
-    </div>
+    <div class="topbar__title">风险评估系统验证码生成器</div>
   </header>
 
-  <main class="layout">
-    <!-- Left sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar__section">
-        <div class="sidebar__title">Admin</div>
-        <div class="sidebar__desc">生成一次性验证码并自动生成发送文案。</div>
-      </div>
-
-      <div class="sidebar__section">
-        <div class="sidebar__label">注意</div>
-        <div class="callout">
-          仅限你本人使用。不要分享页面或 ADMIN KEY。<br/>
-          ADMIN KEY 不落盘，刷新即消失。
-        </div>
-      </div>
-
-      <div class="sidebar__section">
-        <div class="sidebar__label">快捷入口</div>
-        <a class="link" target="_blank" rel="noreferrer" href="https://shadow-pages.pages.dev/enter">
-          用户入口（/enter）
-        </a>
-      </div>
-    </aside>
-
-    <!-- Content -->
-    <section class="content">
-      <!-- Toolbar -->
-      <div class="panel">
-        <div class="panel__header">
-          <div class="panel__title">Token Generator</div>
-          <div class="panel__sub">生成 token → 拼接发送文案 → 自动复制到剪贴板</div>
-        </div>
-
-        <div class="panel__body">
-          <div class="formgrid">
-            <div class="field">
-              <label for="base">Worker API Base</label>
-              <input id="base" value="https://shadow-api.wuxiaofei1985.workers.dev" />
-              <div class="help">例：https://xxx.workers.dev</div>
-            </div>
-
-            <div class="field">
-              <label for="key">ADMIN KEY（不会保存）</label>
-              <input id="key" type="password" placeholder="输入 ADMIN_KEY" autocomplete="off" />
-              <div class="help">请求头：X-ADMIN-KEY（失焦或按 Enter 自动加载 pack）</div>
-            </div>
-
-            <div class="field">
-              <label for="packSelect">选择表单（pack）</label>
-              <div class="row">
-                <select id="packSelect"></select>
-                <button id="reloadPacks" class="btn btn--ghost" type="button">刷新</button>
-              </div>
-              <div class="help">来自 Worker /api/admin/packs（只显示 active 的 pack）</div>
-            </div>
-
-            <div class="field">
-              <label>当前选择（只读）</label>
-              <div class="row">
-                <input id="formKey" placeholder="form_key" readonly />
-                <input id="formVersion" placeholder="form_version" readonly />
-              </div>
-              <div class="help">由 pack 下拉自动填充</div>
-            </div>
-
-            <div class="field">
-              <label for="enterUrl">用户入口链接（发送给客户）</label>
-              <input id="enterUrl" value="https://shadow-pages.pages.dev/enter" />
-              <div class="help">会自动写入发送文案</div>
-            </div>
-
-            <div class="field">
-              <label for="msgTpl">发送文案模板（可改）</label>
-              <textarea id="msgTpl" rows="4"></textarea>
-              <div class="help">支持占位符：{link} / {token}</div>
+  <main class="container">
+    <!-- 上半部分：生成器 -->
+    <section class="panel">
+      <div class="panel__body grid2">
+        <!-- 左侧 -->
+        <div class="col">
+          <div class="field">
+            <label>管理员密码</label>
+            <div class="row">
+              <input id="key" type="password" placeholder="请输入管理员密码" autocomplete="off" />
+              <button id="toggleKey" class="btn btn--muted" type="button">显示密码</button>
             </div>
           </div>
 
-          <div class="actions">
-            <button id="go" class="btn btn--primary" type="button">生成验证码并复制发送文案</button>
-            <button id="copyMsg" class="btn btn--ghost" type="button" disabled>仅复制发送文案</button>
-            <button id="copyToken" class="btn btn--ghost" type="button" disabled>仅复制验证码</button>
+          <div class="field">
+            <label>表单名称（只读）</label>
+            <input id="formName" readonly placeholder="" />
           </div>
 
-          <div id="status" class="status">就绪（输入 ADMIN KEY 后会自动拉取 pack 列表）</div>
+          <div class="field">
+            <label>验证码</label>
+            <div class="row">
+              <input id="tokenOutInput" readonly placeholder="" />
+              <button id="go" class="btn btn--primary" type="button">生成验证码</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>客户入口链接</label>
+            <input id="enterUrl" value="https://shadow-pages.pages.dev/enter" />
+          </div>
+        </div>
+
+        <!-- 右侧 -->
+        <div class="col">
+          <div class="field">
+            <label>选择表单</label>
+            <div class="row">
+              <select id="packSelect"></select>
+              <button id="reloadPacks" class="btn btn--muted" type="button">刷新列表</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>版本号（只读）</label>
+            <div class="row">
+              <input id="formVersion" readonly placeholder="" />
+              <button id="lockPack" class="btn btn--muted" type="button">确认并锁定表单</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>发送给客户的文本</label>
+            <textarea id="msgOut" rows="6"></textarea>
+          </div>
         </div>
       </div>
 
-      <!-- Results table -->
-      <div class="panel">
-        <div class="panel__header panel__header--tight">
-          <div class="panel__title">Output</div>
-          <div class="panel__sub">下方内容会随每次生成更新</div>
+      <div class="panel__footer">
+        <div class="footer-actions">
+          <button id="copyToken" class="btn btn--darkwide" type="button" disabled>复制验证码</button>
+          <button id="copyMsg" class="btn btn--darkwide" type="button" disabled>复制发送文案</button>
         </div>
-
-        <div class="tablewrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th style="width: 160px;">字段</th>
-                <th>内容</th>
-                <th style="width: 140px;">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="k">验证码</td>
-                <td><pre id="tokenOut" class="cellpre">—</pre></td>
-                <td>
-                  <button class="btn btn--ghost btn--sm" id="copyToken2" type="button" disabled>复制</button>
-                </td>
-              </tr>
-              <tr>
-                <td class="k">发送给客户的文本</td>
-                <td><pre id="msgOut" class="cellpre">—</pre></td>
-                <td>
-                  <button class="btn btn--ghost btn--sm" id="copyMsg2" type="button" disabled>复制</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <div id="status" class="status">就绪：先输入管理员密码 → 刷新列表 → 选择表单 → 锁定 → 生成</div>
       </div>
     </section>
+
+    <!-- 下半部分：发放历史 -->
+    <section class="panel">
+      <div class="panel__header">
+        <div class="panel__headerTitle">发放历史记录</div>
+        <div class="panel__headerActions">
+          <button id="exportHistory" class="btn btn--muted" type="button">导出（复制文本）</button>
+          <button id="clearHistory" class="btn btn--muted" type="button">清空</button>
+        </div>
+      </div>
+
+      <div class="tablewrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 240px;">验证码</th>
+              <th style="width: 220px;">发放日期</th>
+              <th>表单名称</th>
+              <th style="width: 120px;">版本号</th>
+              <th style="width: 100px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="5" class="muted">暂无记录</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 隐藏配置（可按需改默认 base） -->
+    <input id="base" type="hidden" value="https://shadow-api.wuxiaofei1985.workers.dev" />
+
+    <!-- 文案模板（占位符：{link} / {token}） -->
+    <textarea id="msgTpl" class="sr-only">
+你好，这里是你的入口与验证码：
+
+入口链接：
+{link}
+
+验证码：
+{token}
+
+打开链接后输入验证码即可进入。
+    </textarea>
   </main>
 
   <script src="/assets/js/admin.js"></script>
-  <script>
-    // 小补丁：让表格里的“复制”按钮复用原按钮
-    const sync = () => {
-      const a = document.getElementById("copyToken");
-      const b = document.getElementById("copyMsg");
-      const a2 = document.getElementById("copyToken2");
-      const b2 = document.getElementById("copyMsg2");
-      if (!a || !b || !a2 || !b2) return;
-      a2.disabled = a.disabled;
-      b2.disabled = b.disabled;
-    };
-    setInterval(sync, 250);
-
-    document.getElementById("copyToken2").onclick = () => document.getElementById("copyToken").click();
-    document.getElementById("copyMsg2").onclick = () => document.getElementById("copyMsg").click();
-  </script>
 </body>
 </html>
