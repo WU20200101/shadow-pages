@@ -5,7 +5,7 @@
   --line:rgba(68,76,91,.18);
   --line2:rgba(68,76,91,.12);
   --muted:rgba(68,76,91,.72);
-  --radius:6px;
+  --radius:8px;
 }
 
 *{ box-sizing:border-box; }
@@ -17,58 +17,99 @@ body{
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
 }
 
-/* 顶栏 */
 .topbar{
   background:var(--ink);
   color:#fff;
+  height:56px;
+}
+.topbar__inner{
+  max-width:1080px;
+  margin:0 auto;
+  padding:0 18px;
   height:56px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 .topbar__title{
-  font-weight:800;
-  letter-spacing:.3px;
+  font-weight:900;
+  letter-spacing:.4px;
   font-size:16px;
-  padding:0 12px;
   text-align:center;
 }
 
-.container{
-  max-width: 960px;
-  margin: 18px auto;
-  padding: 0 14px;
+.page{
+  max-width:1080px;
+  margin:18px auto;
+  padding:0 18px;
 }
 
-.panel{
+.card{
   background:var(--panel);
   border:1px solid var(--line2);
   border-radius:var(--radius);
   overflow:hidden;
 }
 
+.card__head{
+  display:flex;
+  gap:16px;
+  align-items:flex-end;
+  justify-content:space-between;
+  padding:16px 18px;
+  border-bottom:1px solid var(--line2);
+}
+
+.head__title{
+  font-size:15px;
+  font-weight:900;
+}
+.head__sub{
+  margin-top:4px;
+  font-size:12px;
+  color:var(--muted);
+}
+.head__note{
+  font-size:12px;
+  color:var(--muted);
+  text-align:right;
+}
+
+.card__body{
+  padding:18px;
+}
+
+/* advanced (worker base) */
+.advanced{
+  padding:12px;
+  border:1px dashed var(--line2);
+  border-radius:var(--radius);
+  margin-bottom:14px;
+}
+.advanced .help{ margin-top:6px; }
+
 /* step */
 .step{
-  padding: 16px;
-  border-top:1px solid var(--line2);
+  padding:14px 12px;
+  border:1px solid var(--line2);
+  border-radius:var(--radius);
+  margin-bottom:14px;
 }
-.step:first-child{ border-top:none; }
 
-.step__head{
+.step__bar{
   display:flex;
   align-items:baseline;
   justify-content:space-between;
   gap:12px;
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
 .step__title{
   font-weight:900;
-  font-size:14px;
+  font-size:13px;
 }
-.step__sub{
+.step__hint{
   font-size:12px;
   color:var(--muted);
-  line-height:1.4;
   text-align:right;
 }
 
@@ -79,35 +120,55 @@ body{
   margin-bottom:8px;
 }
 
-.input, .select, .textarea{
+.input,.select,.textarea{
   width:100%;
   border:1px solid var(--line2);
   border-radius:var(--radius);
   background:#fff;
   color:var(--ink);
-  padding: 12px 12px;
+  padding:10px 12px;
   font-size:14px;
   line-height:1.6;
   outline:none;
 }
 
-.textarea{ resize:vertical; min-height:120px; }
+.textarea{ resize:vertical; }
 
-.input:focus, .select:focus, .textarea:focus{
+.input:focus,.select:focus,.textarea:focus{
   border-color:var(--line);
-  box-shadow: 0 0 0 3px rgba(68,76,91,.14);
+  box-shadow:0 0 0 3px rgba(68,76,91,.14);
 }
 
-.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.help{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:6px;
+}
 
-.grid2{
+.mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+}
+
+/* grids (PC) */
+.grid{
   display:grid;
-  grid-template-columns: 1fr 220px;
-  gap: 12px;
+  gap:12px;
   align-items:end;
 }
 
-.field{ min-width:0; }
+.grid-2{
+  grid-template-columns: 1fr 220px;
+}
+.grid-2b{
+  grid-template-columns: 1fr 1fr;
+}
+.grid-2c{
+  grid-template-columns: 1fr 1fr;
+  align-items:start;
+}
+.grid-2d{
+  grid-template-columns: 1fr 1fr;
+}
 
 .btncol{
   display:flex;
@@ -121,7 +182,7 @@ body{
   border-radius:var(--radius);
   background:#fff;
   color:var(--ink);
-  padding: 12px 14px;
+  padding:10px 12px;
   font-weight:900;
   font-size:13px;
   cursor:pointer;
@@ -144,54 +205,108 @@ body{
   color:var(--ink);
 }
 
-.hint{
-  margin-top:10px;
-  font-size:12px;
-  color:var(--muted);
-}
-
 .status{
   margin-top:10px;
   font-size:12px;
   color:var(--muted);
 }
 
-.divider{
-  height:10px;
-  background:transparent;
+/* history table */
+.history{
+  margin-top:18px;
   border-top:1px solid var(--line2);
+  padding-top:16px;
 }
-
-/* history */
-#historySection{
-  padding: 16px;
-}
-.historyTitle{
+.history__title{
   font-weight:900;
   font-size:13px;
-  margin-bottom:10px;
   color:var(--muted);
+  margin-bottom:10px;
+}
+.tablewrap{
+  overflow:auto;
+  border:1px solid var(--line2);
+  border-radius:var(--radius);
+}
+.table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:720px;
+  background:#fff;
+}
+.table th,.table td{
+  padding:10px 10px;
+  border-bottom:1px solid var(--line2);
+  font-size:12px;
+  text-align:left;
+  vertical-align:top;
+}
+.table th{
+  font-weight:900;
+  color:var(--muted);
+  background:#fbfbfc;
+}
+.table td.tokenCell{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
 }
 
-/* 手机：强制顺序流 + 按钮不挤 */
-@media (max-width: 720px){
-  .container{ padding: 0 10px; }
+/* small buttons inside table (match your JS class usage) */
+.btn--small{
+  padding:6px 10px;
+  font-size:12px;
+  width:auto;
+}
+.btn--muted{
+  background:#eef0f2;
+  border-color:var(--line2);
+  color:var(--ink);
+}
 
-  .step__head{
+/* =========================
+   Mobile: strict step flow
+   ========================= */
+@media (max-width: 720px){
+  .page{ padding:0 10px; }
+  .card__body{ padding:12px; }
+  .card__head{
     flex-direction:column;
     align-items:flex-start;
-    gap:6px;
+    gap:8px;
   }
-  .step__sub{ text-align:left; }
+  .head__note{ text-align:left; }
 
-  .grid2{
+  /* 让每个 step 在手机上自然纵向（PC不变） */
+  .grid-2,
+  .grid-2b,
+  .grid-2c,
+  .grid-2d{
     grid-template-columns: 1fr;
   }
+
+  /* 手机上按钮不用两列 */
   .btncol{
     flex-direction:row;
   }
   .btncol .btn{
-    width:auto;
-    flex:1;
+    flex:1 1 50%;
+  }
+
+  /* 手机上：把 5 个 step 变成严格顺序流（按 DOM 顺序本来就对）
+     如果你未来有“穿插布局”，可以用 order 强制： */
+  .m-step-1{ order:1; }
+  .m-step-2{ order:2; }
+  .m-step-3{ order:3; }
+  .m-step-4{ order:4; }
+  .m-step-5{ order:5; }
+
+  .step__bar{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+  }
+  .step__hint{ text-align:left; }
+
+  .table{
+    min-width:900px;
   }
 }
