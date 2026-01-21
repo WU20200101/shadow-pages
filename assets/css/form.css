@@ -1,114 +1,203 @@
-<!doctype html>
-<html lang="zh">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="/assets/css/base.css" />
-  <link rel="stylesheet" href="/assets/css/form.css" />
-  <title>填写表单</title>
-</head>
+:root{
+  --ink:#444c5b;
+  --bg:#f3f5f7;
+  --panel:#ffffff;
+  --line:rgba(68,76,91,.18);
+  --line2:rgba(68,76,91,.12);
+  --muted:rgba(68,76,91,.72);
+  --radius:6px;
+}
 
-<body>
-  <header class="topbar">
-    <div class="topbar__title" id="topTitle">风险评估表单</div>
-  </header>
+*{ box-sizing:border-box; }
 
-  <main class="container">
-    <section class="panel">
-      <div class="panel__header">
-        <div class="panel__headerTitle" id="title">填写表单</div>
-        <div class="panel__headerSub" id="sub">请按直觉填写，不需要解释。</div>
-      </div>
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
 
-      <div class="panel__body">
-        <div class="progress">
-          <div class="progress__bar"><div id="bar" class="progress__fill"></div></div>
-          <div id="stepText" class="progress__text">—</div>
-        </div>
+.topbar{
+  background: var(--ink);
+  color:#fff;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.topbar__title{
+  font-weight:800;
+  letter-spacing:.3px;
+  padding:0 12px;
+  text-align:center;
+  font-size: 16px; /* 顶栏标题更大 */
+}
 
-        <div id="stage"></div>
+.container{
+  max-width: 880px;
+  margin: 18px auto;
+  padding: 0 14px;
+}
 
-        <div class="divider"></div>
+.panel{
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  border-radius: var(--radius);
+  overflow:hidden;
+}
 
-        <div class="actions">
-          <button id="next" class="btn btn--primary" type="button">下一步</button>
-        </div>
+.panel__header{
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line2);
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+}
 
-        <div id="msg" class="status">就绪</div>
-      </div>
-    </section>
+.panel__headerTitle{
+  font-weight:800;
+  font-size: 17px; /* 主标题更大 */
+}
 
-    <!-- 用于“回灌答案后再提交”的隐藏容器（submit.js 会从 document 里读） -->
-    <div id="hiddenForm" class="sr-only"></div>
-  </main>
+.panel__headerSub{
+  font-size: 13px; /* 副标题稍大 */
+  color: var(--muted);
+  line-height: 1.6;
+}
 
-  <script type="module">
-    import { submitFlow } from "/assets/js/submit.js";
-    import { createWizardDom } from "/assets/js/form-wizard-dom.js";
+.panel__body{ padding: 16px; }
 
-    const msg = document.getElementById("msg");
-    const nextBtn = document.getElementById("next");
-    const stage = document.getElementById("stage");
-    const hiddenForm = document.getElementById("hiddenForm");
+.progress{
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
 
-    const token = sessionStorage.getItem("token");
-    const enterPayloadRaw = sessionStorage.getItem("enter_payload");
+.progress__bar{
+  width:100%;
+  height:8px;
+  border-radius: 999px;
+  background: rgba(68,76,91,.12);
+  overflow:hidden;
+}
 
-    if (!token || !enterPayloadRaw) {
-      location.href = "/enter.html";
-    }
+.progress__fill{
+  height:100%;
+  width:0%;
+  background: var(--ink);
+}
 
-    let enterPayload;
-    try { enterPayload = JSON.parse(enterPayloadRaw); } catch {}
+.progress__text{
+  font-size: 12px;
+  color: var(--muted);
+}
 
-    const schema = enterPayload?.schema;
-    const displayName =
-      enterPayload?.display_name ||
-      enterPayload?.pack?.display_name ||
-      sessionStorage.getItem("display_name") ||
-      "风险评估表单";
+.divider{
+  height: 1px;
+  background: var(--line2);
+  margin: 14px 0;
+}
 
-    // 顶部标题改为“表单中文名”
-    document.getElementById("topTitle").textContent = displayName;
-    document.getElementById("title").textContent = displayName;
+.actions{ display:flex; }
 
-    // 禁止浏览器返回（避免“退回上一题/上一页”）
-    history.pushState({ lock: true }, "");
-    window.addEventListener("popstate", () => history.pushState({ lock: true }, ""));
+.btn{
+  border:1px solid var(--line2);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background:#fff;
+  color: var(--ink);
+  font-weight:800;
+  font-size: 14px;
+  cursor:pointer;
+  width: 100%;
+}
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.btn--primary{ background: var(--ink); border-color: var(--ink); color:#fff; }
 
-    const wiz = createWizardDom({
-      mount: stage,
-      schema,
-      displayName,
-      setStatus: (t) => msg.textContent = t,
-      onUI: ({ nextText, progressText, progressRatio }) => {
-        nextBtn.textContent = nextText;
-        document.getElementById("stepText").textContent = progressText;
-        document.getElementById("bar").style.width = `${Math.round(progressRatio * 100)}%`;
-      }
-    });
+.status{
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
 
-    nextBtn.addEventListener("click", async () => {
-      try {
-        const r = wiz.next(); // { done, canSubmit, answers }
-        if (!r.done) return;
+/* 题目更大（你说读起来累） */
+.stepTitle{
+  font-weight:800;
+  font-size: 16px;
+  margin-bottom: 10px;
+  line-height: 1.45;
+}
 
-        // done：已到最后一步（提交页）
-        // 把内存答案回灌成“原 renderForm 的 DOM 结构”，让 submitFlow 原封不动工作
-        hiddenForm.innerHTML = "";
-        wiz.materializeTo(hiddenForm);
+/* 题目页的标题再更大一点 */
+.stepTitle--q{
+  font-size: 17px;
+}
 
-        nextBtn.disabled = true;
-        msg.textContent = "提交中…";
+/* 提示文更易读 */
+.help{
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
 
-        await submitFlow({ token, schema });
+/* 输入框字体略大一点 */
+.input, textarea{
+  width:100%;
+  border:1px solid var(--line2);
+  border-radius: var(--radius);
+  padding: 12px 12px;
+  background:#fff;
+  color: var(--ink);
+  outline:none;
+  font-size: 15px;
+  line-height: 1.7;
+}
+textarea{ resize: vertical; min-height: 150px; }
 
-        // submitFlow 会跳 waiting.html
-      } catch (e) {
-        msg.textContent = e?.message || "操作失败";
-        nextBtn.disabled = false;
-      }
-    });
-  </script>
-</body>
-</html>
+.input:focus, textarea:focus{
+  border-color: var(--line);
+  box-shadow: 0 0 0 3px rgba(68,76,91,.16);
+}
+
+/* 选项字体不动：保持你说“刚刚好”的尺寸（跟随浏览器/label 默认 + 行高） */
+.choiceList{ display:flex; flex-direction:column; gap: 10px; }
+
+.choiceRow{
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  border:1px solid var(--line2);
+  border-radius: var(--radius);
+  padding: 12px;
+  background:#fff;
+}
+
+.choiceRow input{ margin-top: 2px; }
+
+.choiceRow label{
+  line-height: 1.45;
+  font-size: 14px; /* 固定住选项字号 */
+}
+
+.rangeWrap{ display:flex; flex-direction:column; gap: 10px; }
+
+.rangeMeta{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.rangeVal{ font-weight:800; color: var(--ink); }
+
+.sr-only{
+  position:absolute !important;
+  left:-9999px !important;
+  top:-9999px !important;
+  width:1px !important;
+  height:1px !important;
+  opacity:0 !important;
+}
