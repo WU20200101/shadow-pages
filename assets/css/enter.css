@@ -17,6 +17,7 @@ body{
   color: var(--ink);
 }
 
+/* 顶部深色条：与 form/admin 一致 */
 .topbar{
   background: var(--ink);
   color:#fff;
@@ -25,17 +26,23 @@ body{
   align-items:center;
   justify-content:center;
 }
+
 .topbar__title{
   font-weight:800;
   letter-spacing:.3px;
+  padding:0 12px;
+  text-align:center;
+  font-size:16px;
 }
 
+/* 主体容器 */
 .container{
   max-width: 880px;
-  margin: 26px auto;
+  margin: 18px auto;
   padding: 0 14px;
 }
 
+/* 面板：无阴影，小圆角，严谨 */
 .panel{
   background: var(--panel);
   border: 1px solid var(--line2);
@@ -50,27 +57,30 @@ body{
   flex-direction:column;
   gap: 6px;
 }
+
 .panel__headerTitle{
   font-weight:800;
-  font-size: 15px;
+  font-size:17px;
 }
+
 .panel__headerSub{
-  font-size: 12px;
+  font-size:13px;
   color: var(--muted);
+  line-height:1.6;
 }
 
 .panel__body{
   padding: 16px;
 }
 
-.field label{
+.label{
   display:block;
-  font-size:13px;
   font-weight:700;
-  margin-bottom: 6px;
+  font-size:13px;
+  margin-bottom:8px;
 }
 
-.field input{
+.input{
   width:100%;
   border:1px solid var(--line2);
   border-radius: var(--radius);
@@ -78,11 +88,12 @@ body{
   background:#fff;
   color: var(--ink);
   outline:none;
-  font-size: 14px;
-  letter-spacing: .6px;
+  font-size:15px;
+  line-height:1.6;
+  text-transform: uppercase;
 }
 
-.field input:focus{
+.input:focus{
   border-color: var(--line);
   box-shadow: 0 0 0 3px rgba(68,76,91,.16);
 }
@@ -91,6 +102,7 @@ body{
   margin-top: 8px;
   font-size: 12px;
   color: var(--muted);
+  line-height: 1.6;
 }
 
 .actions{
@@ -98,16 +110,17 @@ body{
 }
 
 .btn{
+  width:100%;
   border:1px solid var(--line2);
   border-radius: var(--radius);
   padding: 12px 14px;
   background:#fff;
   color: var(--ink);
   font-weight:800;
-  font-size: 14px;
+  font-size:14px;
   cursor:pointer;
-  width: 100%;
 }
+
 .btn:disabled{
   opacity:.45;
   cursor:not-allowed;
