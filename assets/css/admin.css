@@ -107,26 +107,24 @@ body{
   gap:12px;
   align-items:center;
 }
+
 /* 管理员密码：输入 + 显示密码 */
-.row--key {
-  display: flex !important;
-  align-items: center;
-  gap: 12px;
+.row--key{
+  display:flex !important;
+  align-items:center;
 }
 
-.row--key .input {
-  flex: 1;
-  width: auto !important;
-  min-width: 0;
+/* 输入框占满剩余空间 */
+.row--key .input{
+  flex:1;
+  min-width:0;
+  width:auto !important;
 }
 
-.row--key .spacer{
-  flex:0 0 12px;
-}
-
-#toggleKey {
-  white-space: nowrap;
-  position: static;
+/* ✅ 用 margin-left 兜底（不依赖 gap） */
+#toggleKey{
+  margin-left:12px;      /* 你要更大就改这里 */
+  white-space:nowrap;
 }
 
 
