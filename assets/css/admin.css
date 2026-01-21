@@ -111,7 +111,7 @@ body{
 .row--key {
   display: flex;
   align-items: center;
-  gap: 12px;              /* 👈 关键：这里补间距 */
+  gap: 50px;              /* 👈 关键：这里补间距 */
 }
 
 .row--key .input {
