@@ -78,8 +78,8 @@
           window.location.href = "/form";
           return;
           // 把中文表单名保存下来（供 form 页面显示）
-if (data?.display_name) {
-  sessionStorage.setItem("display_name", data.display_name);
+if (data?.display_name) sessionStorage.setItem("display_name", data.display_name);
+sessionStorage.setItem("enter_payload", JSON.stringify(data));
 }
 
 // 同步写回 enter_payload，保证 form 一定能读到
