@@ -32,6 +32,62 @@ function nowText() {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
+/** ================== 状态机（严格门控） ==================
+ * step 0: 初始（未确认管理员密码）
+ * step 1: 管理员密码已确认（可刷新/可选择）
+ * step 2: 已选择表单（可锁定）
+ * step 3: 已锁定表单（可生成）
+ * step 4: 已生成（可复制）
+ */
+let step = 0;
+let lockedPack = null;   // { display_name, form_key, form_version }
+let packsCache = [];     // 最近一次拉到的 active packs
+
+function applyGate() {
+  // step 0
+  $("reloadPacks").disabled = !(step >= 1);
+  $("packSelect").disabled = !(step >= 1);
+
+  // 锁定按钮：必须选到一个 pack（step>=2）
+  $("lockPack").disabled = !(step >= 2);
+
+  // 生成按钮：必须锁定（step>=3）
+  $("go").disabled = !(step >= 3);
+
+  // 复制按钮：必须生成成功（step>=4）
+  $("copyToken").disabled = !(step >= 4);
+  $("copyMsg").disabled = !(step >= 4);
+
+  // 选择/刷新在锁定后不可操作
+  if (step >= 3) {
+    $("reloadPacks").disabled = true;
+    $("packSelect").disabled = true;
+  }
+}
+
+function resetAfterKeyConfirm() {
+  // 密码确认后：清空所有“后置状态”
+  lockedPack = null;
+  step = 1;
+
+  $("tokenOutInput").value = "";
+  $("msgOut").value = "";
+  $("formName").value = "";
+  $("formVersion").value = "";
+
+  // packSelect 先清空占位
+  const sel = $("packSelect");
+  sel.innerHTML = "";
+  const opt = document.createElement("option");
+  opt.value = "";
+  opt.textContent = "确认管理员密码后刷新列表";
+  sel.appendChild(opt);
+
+  packsCache = [];
+
+  applyGate();
+}
+
 /** ========== packs (KV: /api/admin/packs) ========== **/
 
 function isActivePack(p) {
@@ -50,64 +106,15 @@ function getPackFormVersion(p) {
 }
 
 function getPackDisplayName(p) {
-  // ✅ 你要求：表单名称必须用 KV 里的 display_name（中文名）
-  return (p.display_name || p.displayName || p.name || p.title || "").toString().trim();
-}
-
-function renderPacks(packs) {
-  const sel = $("packSelect");
-  sel.innerHTML = "";
-
-  const actives = (packs || []).filter(isActivePack);
-  if (!actives.length) {
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "（没有可用的 active 表单）";
-    sel.appendChild(opt);
-    clearPackFields();
-    return;
-  }
-
-  actives.forEach((p, idx) => {
-    const name = getPackDisplayName(p) || `${getPackFormKey(p)}:${getPackFormVersion(p)}`;
-    const opt = document.createElement("option");
-    opt.value = String(idx);
-    opt.textContent = name;      // ✅ 下拉显示中文名（display_name）
-    opt._pack = p;
-    sel.appendChild(opt);
-  });
-
-  sel.selectedIndex = 0;
-  applySelectedPack();
-}
-
-function clearPackFields() {
-  $("formName").value = "";
-  $("formVersion").value = "";
-  $("tokenOutInput").value = "";
-  $("copyToken").disabled = true;
-  $("copyMsg").disabled = true;
-}
-
-function applySelectedPack() {
-  const sel = $("packSelect");
-  const opt = sel.options[sel.selectedIndex];
-  const p = opt && opt._pack;
-
-  const name = p ? (getPackDisplayName(p) || "") : "";
-  const ver  = p ? (getPackFormVersion(p) || "") : "";
-
-  $("formName").value = name;
-  $("formVersion").value = ver;
-
-  // 未锁定时允许变更；锁定后不自动改
+  // ✅ 必须使用 KV display_name
+  return (p.display_name || p.displayName || "").toString().trim();
 }
 
 async function fetchPacks() {
   const base = $("base").value.trim();
   const adminKey = $("key").value;
 
-  if (!adminKey) throw new Error("管理员密码不能为空（需要用它拉取表单列表）");
+  if (!adminKey) throw new Error("管理员密码不能为空");
 
   const res = await fetch(`${base}/api/admin/packs`, {
     method: "GET",
@@ -124,19 +131,72 @@ async function fetchPacks() {
   const packs = Array.isArray(data) ? data : (data.packs || data.data || []);
   if (!Array.isArray(packs)) throw new Error("表单列表格式不正确：\n" + text);
 
-  return packs;
+  return packs.filter(isActivePack);
+}
+
+function renderPacks(packs) {
+  packsCache = packs;
+
+  const sel = $("packSelect");
+  sel.innerHTML = "";
+
+  if (!packs.length) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "（没有可用的 active 表单）";
+    sel.appendChild(opt);
+    $("formName").value = "";
+    $("formVersion").value = "";
+    step = Math.max(step, 1); // 仍停留在可刷新状态
+    applyGate();
+    return;
+  }
+
+  packs.forEach((p, idx) => {
+    const display = getPackDisplayName(p) || `${getPackFormKey(p)}:${getPackFormVersion(p)}`;
+    const opt = document.createElement("option");
+    opt.value = String(idx);
+    opt.textContent = display; // ✅ 下拉显示 display_name
+    sel.appendChild(opt);
+  });
+
+  sel.selectedIndex = 0;
+  applySelectedPack();
+}
+
+function applySelectedPack() {
+  if (step < 1) return; // 未确认管理员密码，不允许选择
+
+  const sel = $("packSelect");
+  const idx = Number(sel.value);
+  const p = packsCache[idx];
+
+  if (!p) {
+    $("formName").value = "";
+    $("formVersion").value = "";
+    step = 1;
+    applyGate();
+    return;
+  }
+
+  $("formName").value = getPackDisplayName(p) || "";
+  $("formVersion").value = getPackFormVersion(p) || "";
+
+  // ✅ 选到表单才进入 step 2
+  step = 2;
+  applyGate();
 }
 
 /** ========== lock pack ========== **/
 
-let lockedPack = null; // {display_name, form_key, form_version}
-
 function lockCurrentPack() {
-  const sel = $("packSelect");
-  const opt = sel.options[sel.selectedIndex];
-  const p = opt && opt._pack;
+  if (step < 2) throw new Error("请先选择表单");
 
-  if (!p) throw new Error("请先选择表单");
+  const sel = $("packSelect");
+  const idx = Number(sel.value);
+  const p = packsCache[idx];
+
+  if (!p) throw new Error("请选择有效的表单");
 
   const display_name = getPackDisplayName(p) || "未命名表单";
   const form_key = getPackFormKey(p);
@@ -146,14 +206,8 @@ function lockCurrentPack() {
 
   lockedPack = { display_name, form_key, form_version };
 
-  // 锁定 UI：禁用下拉/刷新
-  sel.disabled = true;
-  $("reloadPacks").disabled = true;
-  $("lockPack").disabled = true;
-
-  // 写入只读显示
-  $("formName").value = display_name;
-  $("formVersion").value = form_version;
+  step = 3;
+  applyGate();
 
   setStatus(`已锁定表单：${display_name}（${form_key}:${form_version}）`);
 }
@@ -165,7 +219,7 @@ async function requestToken() {
   const adminKey = $("key").value;
 
   if (!adminKey) throw new Error("管理员密码不能为空");
-  if (!lockedPack) throw new Error("请先点击「确认并锁定表单」");
+  if (step < 3 || !lockedPack) throw new Error("请先锁定表单");
 
   const res = await fetch(`${base}/api/admin/token`, {
     method: "POST",
@@ -286,10 +340,6 @@ function renderHistory() {
 
 /** ========== init ========== **/
 
-function initTemplate() {
-  // msgTpl 在 HTML 里已经内置；这里不强制改它
-}
-
 function initToggleKey() {
   $("toggleKey").addEventListener("click", () => {
     const input = $("key");
@@ -299,50 +349,43 @@ function initToggleKey() {
   });
 }
 
-function initPackSelect() {
-  $("packSelect").addEventListener("change", () => {
-    if (lockedPack) return; // 锁定后不再响应
-    applySelectedPack();
+function initConfirmKey() {
+  $("confirmKey").addEventListener("click", async () => {
+    const key = $("key").value;
+    if (!key) {
+      setStatus("请先输入管理员密码，再点击确认");
+      return;
+    }
+
+    // ✅ 只做“确认门槛”，不一定要立刻请求服务端
+    // 你要求：确认后才可刷新和选择
+    resetAfterKeyConfirm();
+    setStatus("管理员密码已确认：现在可以刷新列表并选择表单");
   });
 }
 
 function initReloadPacks() {
   $("reloadPacks").addEventListener("click", async () => {
+    if (step < 1) {
+      setStatus("请先确认管理员密码");
+      return;
+    }
     try {
       setStatus("拉取表单列表中…");
       const packs = await fetchPacks();
       renderPacks(packs);
-      setStatus("表单列表已加载");
+      setStatus("表单列表已加载：请选择表单，然后锁定");
     } catch (e) {
       setStatus("表单列表加载失败：" + e.message);
     }
   });
+}
 
-  // 输入 key 后：失焦/回车自动拉一次
-  $("key").addEventListener("blur", async () => {
-    if ($("packSelect").options.length > 0) return; // 已有就不重复拉
-    if (!$("key").value) return;
-    try {
-      setStatus("拉取表单列表中…");
-      const packs = await fetchPacks();
-      renderPacks(packs);
-      setStatus("表单列表已加载");
-    } catch (e) {
-      setStatus("表单列表加载失败：" + e.message);
-    }
-  });
-
-  $("key").addEventListener("keydown", async (ev) => {
-    if (ev.key !== "Enter") return;
-    if (!$("key").value) return;
-    try {
-      setStatus("拉取表单列表中…");
-      const packs = await fetchPacks();
-      renderPacks(packs);
-      setStatus("表单列表已加载");
-    } catch (e) {
-      setStatus("表单列表加载失败：" + e.message);
-    }
+function initPackSelect() {
+  $("packSelect").addEventListener("change", () => {
+    if (step < 1) return;
+    if (step >= 3) return; // 锁定后不允许再变
+    applySelectedPack();
   });
 }
 
@@ -358,9 +401,16 @@ function initLockPack() {
 
 function initGenerate() {
   $("go").addEventListener("click", async () => {
+    if (step < 3) {
+      setStatus("请先锁定表单");
+      return;
+    }
+
+    // 清空旧输出，回到 step 3（仍可生成）
+    $("tokenOutInput").value = "";
     $("copyToken").disabled = true;
     $("copyMsg").disabled = true;
-    $("tokenOutInput").value = "";
+
     setStatus("生成中…");
 
     try {
@@ -371,7 +421,7 @@ function initGenerate() {
       const msg = buildMessage(link, token);
       $("msgOut").value = msg;
 
-      // 默认：生成后立刻复制发送文案（你最常用）
+      // 默认：生成后立刻复制发送文案
       await copyToClipboard(msg);
 
       // 写入历史（名称用 KV display_name）
@@ -383,8 +433,8 @@ function initGenerate() {
         form_version: lockedPack ? lockedPack.form_version : ""
       });
 
-      $("copyToken").disabled = false;
-      $("copyMsg").disabled = false;
+      step = 4;
+      applyGate();
 
       setStatus("成功：已生成验证码并复制发送文案（历史已记录）");
     } catch (e) {
@@ -395,6 +445,7 @@ function initGenerate() {
 
 function initCopyButtons() {
   $("copyToken").addEventListener("click", async () => {
+    if (step < 4) return;
     const token = $("tokenOutInput").value.trim();
     if (!token) return;
     try {
@@ -406,6 +457,7 @@ function initCopyButtons() {
   });
 
   $("copyMsg").addEventListener("click", async () => {
+    if (step < 4) return;
     const msg = $("msgOut").value;
     if (!msg.trim()) return;
     try {
@@ -434,23 +486,30 @@ function initCopyButtons() {
 }
 
 (function boot() {
-  // 初始：历史渲染
+  // 历史先渲染
   renderHistory();
 
-  initTemplate();
+  // 初始状态：step=0
+  step = 0;
+  lockedPack = null;
+  packsCache = [];
+
+  // 初始 pack 下拉占位
+  const sel = $("packSelect");
+  sel.innerHTML = "";
+  const opt = document.createElement("option");
+  opt.value = "";
+  opt.textContent = "确认管理员密码后刷新列表";
+  sel.appendChild(opt);
+
   initToggleKey();
-  initPackSelect();
+  initConfirmKey();
   initReloadPacks();
+  initPackSelect();
   initLockPack();
   initGenerate();
   initCopyButtons();
 
-  // 初始 packs 下拉占位
-  const sel = $("packSelect");
-  const opt = document.createElement("option");
-  opt.value = "";
-  opt.textContent = "（请先输入管理员密码后刷新列表）";
-  sel.appendChild(opt);
-
-  setStatus("就绪：先输入管理员密码 → 刷新列表 → 选择表单 → 锁定 → 生成");
+  applyGate();
+  setStatus("就绪：输入管理员密码后点击「确认」");
 })();
