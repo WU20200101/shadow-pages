@@ -4,19 +4,38 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="/assets/css/base.css" />
+  <link rel="stylesheet" href="/assets/css/enter.css" />
   <title>输入验证码</title>
 </head>
+
 <body>
-  <div class="page">
-    <h2>输入验证码</h2>
-    <p class="muted">请输入你收到的验证码（例如：MHCE-D684）</p>
+  <header class="topbar">
+    <div class="topbar__title">风险评估系统</div>
+  </header>
 
-    <input id="token" type="text" placeholder="XXXX-XXXX" style="text-transform:uppercase" />
-    <div style="height:10px"></div>
-    <button id="go" class="primary">进入</button>
+  <main class="container">
+    <section class="panel">
+      <div class="panel__header">
+        <div class="panel__headerTitle">输入验证码</div>
+        <div class="panel__headerSub">请输入你收到的验证码（例如：MHCE-D684）</div>
+      </div>
 
-    <p id="msg" class="muted"></p>
-  </div>
+      <div class="panel__body">
+        <div class="field">
+          <label for="token">验证码</label>
+          <input id="token" type="text" placeholder="XXXX-XXXX" autocomplete="one-time-code" inputmode="latin"
+                 style="text-transform:uppercase" />
+          <div class="help">提示：验证码不区分大小写，会自动转为大写。</div>
+        </div>
+
+        <div class="actions">
+          <button id="go" class="btn btn--primary" type="button">进入</button>
+        </div>
+
+        <div id="msg" class="status">就绪</div>
+      </div>
+    </section>
+  </main>
 
   <script type="module">
     import { apiPost } from "/assets/js/api.js";
@@ -25,14 +44,23 @@
     const msg = document.getElementById("msg");
     const btn = document.getElementById("go");
 
-    tokenEl.addEventListener("keydown", (e) => { if (e.key === "Enter") btn.click(); });
+    const setMsg = (t) => { msg.textContent = t; };
+
+    tokenEl.addEventListener("input", () => {
+      // 自动大写 + 清理空格
+      tokenEl.value = (tokenEl.value || "").toUpperCase().replace(/\s+/g, "");
+    });
+
+    tokenEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") btn.click();
+    });
 
     btn.addEventListener("click", async () => {
       const token = (tokenEl.value || "").trim().toUpperCase();
-      if (!token) { msg.textContent = "请输入验证码"; return; }
+      if (!token) { setMsg("请输入验证码"); return; }
 
       btn.disabled = true;
-      msg.textContent = "校验中…";
+      setMsg("校验中…");
 
       try {
         const data = await apiPost("/api/enter", { token });
@@ -51,13 +79,16 @@
           return;
         }
 
-        msg.textContent = "校验失败：返回数据异常";
+        setMsg("校验失败：返回数据异常");
       } catch (e) {
-        msg.textContent = e.message || "校验失败";
+        setMsg(e?.message || "校验失败");
       } finally {
         btn.disabled = false;
       }
     });
+
+    // 初始聚焦
+    tokenEl.focus();
   </script>
 </body>
 </html>
