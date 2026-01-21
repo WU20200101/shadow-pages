@@ -43,7 +43,7 @@ body{ background: var(--bg); }
   width:min(820px, 100%);
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:8px;
 }
 
 /* card base */
