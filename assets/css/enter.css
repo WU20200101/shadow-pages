@@ -1,0 +1,126 @@
+:root{
+  --ink:#444c5b;
+  --bg:#f3f5f7;
+  --panel:#ffffff;
+  --line:rgba(68,76,91,.18);
+  --line2:rgba(68,76,91,.12);
+  --muted:rgba(68,76,91,.72);
+  --radius:6px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.topbar{
+  background: var(--ink);
+  color:#fff;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.topbar__title{
+  font-weight:800;
+  letter-spacing:.3px;
+}
+
+.container{
+  max-width: 880px;
+  margin: 26px auto;
+  padding: 0 14px;
+}
+
+.panel{
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  border-radius: var(--radius);
+  overflow:hidden;
+}
+
+.panel__header{
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line2);
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+}
+.panel__headerTitle{
+  font-weight:800;
+  font-size: 15px;
+}
+.panel__headerSub{
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.panel__body{
+  padding: 16px;
+}
+
+.field label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom: 6px;
+}
+
+.field input{
+  width:100%;
+  border:1px solid var(--line2);
+  border-radius: var(--radius);
+  padding: 12px 12px;
+  background:#fff;
+  color: var(--ink);
+  outline:none;
+  font-size: 14px;
+  letter-spacing: .6px;
+}
+
+.field input:focus{
+  border-color: var(--line);
+  box-shadow: 0 0 0 3px rgba(68,76,91,.16);
+}
+
+.help{
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.actions{
+  margin-top: 14px;
+}
+
+.btn{
+  border:1px solid var(--line2);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background:#fff;
+  color: var(--ink);
+  font-weight:800;
+  font-size: 14px;
+  cursor:pointer;
+  width: 100%;
+}
+.btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.btn--primary{
+  background: var(--ink);
+  border-color: var(--ink);
+  color:#fff;
+}
+
+.status{
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
