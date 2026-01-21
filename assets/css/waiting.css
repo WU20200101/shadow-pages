@@ -139,5 +139,5 @@ body{
   .wrap{ width: calc(100% - 24px); }
   .card__hd{ padding:16px; }
   .card__bd{ padding:16px; }
-  .topbar__title{ font-size:15px; }
+  .topbar__title{ font-size:20px; }
 }
