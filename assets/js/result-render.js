@@ -17,32 +17,22 @@ export function renderResult(container, data) {
   if (hasModules) {
     const cards = [];
 
-    // Module 1
     if (cr?.module1?.text) {
       cards.push(card("模块 1｜当前判断状态的整体轮廓", [cr.module1.text]));
     }
-
-    // Module 2
     if (cr?.module2?.text) {
       cards.push(card("模块 2｜判断张力最大的集中点", [cr.module2.text]));
     }
-
-    // Module 3
     if (Array.isArray(cr?.module3?.list) && cr.module3.list.length) {
       cards.push(cardList("模块 3｜当前仍未被确认的判断维度", cr.module3.list));
     }
-
-    // Module 4 (must)
     if (cr?.module4?.text) {
       cards.push(card("模块 4｜判断边界声明", [cr.module4.text]));
     }
-
-    // Module 5 (must)
     if (cr?.module5?.text) {
       cards.push(card("模块 5｜使用方式说明", [cr.module5.text]));
     }
 
-    // If everything missing (edge)
     if (!cards.length) {
       container.innerHTML = `
         <section class="card">
@@ -54,19 +44,17 @@ export function renderResult(container, data) {
 
     container.innerHTML = cards.join("");
 
-    // Optional meta (debug) - keep muted, safe
+    // Optional meta (debug) - muted + safe
     if (cr?.meta?.generated_at || cr?.meta?.engine) {
       const metaLine = [
         cr?.meta?.engine ? `engine: ${escapeHtml(cr.meta.engine)}` : null,
-        cr?.meta?.generated_at ? `generated: ${escapeHtml(cr.meta.generated_at)}` : null
-      ].filter(Boolean).join(" · ");
+        cr?.meta?.generated_at ? `generated: ${escapeHtml(cr.meta.generated_at)}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
       if (metaLine) {
-        container.innerHTML += `
-          <div class="muted" style="margin-top:12px;font-size:12px;">
-            ${metaLine}
-          </div>
-        `;
+        container.innerHTML += `<div class="result__meta">${metaLine}</div>`;
       }
     }
 
@@ -78,16 +66,18 @@ export function renderResult(container, data) {
   // =========================
   const blocks = Array.isArray(cr?.blocks) ? cr.blocks : [];
   if (blocks.length) {
-    container.innerHTML = blocks.map(b => {
-      const title = escapeHtml(b.title || "");
-      const body = Array.isArray(b.body) ? b.body : [];
-      return `
-        <section class="card">
-          ${title ? `<h3>${title}</h3>` : ""}
-          ${body.map(line => `<p>${escapeHtml(line)}</p>`).join("")}
-        </section>
-      `;
-    }).join("");
+    container.innerHTML = blocks
+      .map((b) => {
+        const title = escapeHtml(b.title || "");
+        const body = Array.isArray(b.body) ? b.body : [];
+        return `
+          <section class="card">
+            ${title ? `<h3>${title}</h3>` : ""}
+            ${body.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}
+          </section>
+        `;
+      })
+      .join("");
     return;
   }
 
@@ -107,7 +97,7 @@ function card(title, paragraphs) {
   const t = escapeHtml(title || "");
   const ps = (paragraphs || [])
     .filter(Boolean)
-    .map(p => `<p>${escapeHtml(p)}</p>`)
+    .map((p) => `<p>${escapeHtml(p)}</p>`)
     .join("");
   return `
     <section class="card">
@@ -121,12 +111,12 @@ function cardList(title, items) {
   const t = escapeHtml(title || "");
   const lis = (items || [])
     .filter(Boolean)
-    .map(x => `<li>${escapeHtml(x)}</li>`)
+    .map((x) => `<li>${escapeHtml(x)}</li>`)
     .join("");
   return `
     <section class="card">
       ${t ? `<h3>${t}</h3>` : ""}
-      <ul style="margin:10px 0 0 18px; padding:0;">
+      <ul class="result__list">
         ${lis}
       </ul>
     </section>
@@ -134,11 +124,11 @@ function cardList(title, items) {
 }
 
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, m => ({
+  return String(s).replace(/[&<>"']/g, (m) => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     "\"": "&quot;",
-    "'": "&#39;"
+    "'": "&#39;",
   }[m]));
 }
