@@ -14,116 +14,128 @@
   </header>
 
   <main class="container">
-    <!-- 上半部分：生成器 -->
     <section class="panel">
-      <div class="panel__body grid2">
-        <!-- 左侧 -->
-        <div class="col">
+
+      <!-- STEP 1 -->
+      <div class="step" id="step1">
+        <div class="step__head">
+          <div class="step__title">1）管理员密码</div>
+          <div class="step__sub">确认后才能刷新与选择表单</div>
+        </div>
+
+        <div class="grid2">
           <div class="field">
-            <label>管理员密码</label>
-            <div class="row">
-              <input id="key" type="password" placeholder="请输入管理员密码" autocomplete="off" />
-              <button id="toggleKey" class="btn btn--muted" type="button">显示密码</button>
-              <button id="confirmKey" class="btn btn--primary" type="button">确认</button>
-            </div>
+            <label class="label" for="key">管理员密码</label>
+            <input id="key" class="input" type="password" placeholder="请输入管理员密码" autocomplete="off" />
           </div>
 
-          <div class="field">
-            <label>表单名称（只读）</label>
-            <input id="formName" readonly placeholder="" />
-          </div>
-
-          <div class="field">
-            <label>验证码</label>
-            <div class="row">
-              <input id="tokenOutInput" readonly placeholder="" />
-              <button id="go" class="btn btn--primary" type="button" disabled>生成验证码</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>客户入口链接</label>
-            <input id="enterUrl" value="https://shadow-pages.pages.dev/enter" />
+          <div class="btncol">
+            <button id="toggleKey" class="btn btn--ghost" type="button">显示密码</button>
+            <button id="confirmAdmin" class="btn btn--primary" type="button">确认</button>
           </div>
         </div>
 
-        <!-- 右侧 -->
-        <div class="col">
+        <div class="hint">ADMIN KEY 不会保存，刷新页面即消失。</div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step" id="step2">
+        <div class="step__head">
+          <div class="step__title">2）刷新列表</div>
+          <div class="step__sub">从 Worker 拉取 active 的 pack</div>
+        </div>
+
+        <div class="grid2">
           <div class="field">
-            <label>选择表单</label>
-            <div class="row">
-              <select id="packSelect" disabled></select>
-              <button id="reloadPacks" class="btn btn--muted" type="button" disabled>刷新列表</button>
-            </div>
+            <label class="label" for="packSelect">选择表单</label>
+            <select id="packSelect" class="select" disabled></select>
+          </div>
+
+          <div class="btncol">
+            <button id="refreshPacks" class="btn btn--primary" type="button" disabled>刷新列表</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="formName">表单名称（只读）</label>
+            <input id="formName" class="input" type="text" readonly />
           </div>
 
           <div class="field">
-            <label>版本号（只读）</label>
-            <div class="row">
-              <input id="formVersion" readonly placeholder="" />
-              <button id="lockPack" class="btn btn--muted" type="button" disabled>确认并锁定表单</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>发送给客户的文本</label>
-            <textarea id="msgOut" rows="6"></textarea>
+            <label class="label" for="formVersion">版本号（只读）</label>
+            <input id="formVersion" class="input" type="text" readonly />
           </div>
         </div>
       </div>
 
-      <div class="panel__footer">
-        <div class="footer-actions">
-          <button id="copyToken" class="btn btn--darkwide" type="button" disabled>复制验证码</button>
-          <button id="copyMsg" class="btn btn--darkwide" type="button" disabled>复制发送文案</button>
+      <!-- STEP 3 -->
+      <div class="step" id="step3">
+        <div class="step__head">
+          <div class="step__title">3）确认并锁定表单</div>
+          <div class="step__sub">锁定后才能生成验证码</div>
         </div>
-        <div id="status" class="status">就绪：输入管理员密码后点击「确认」</div>
+
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="enterUrl">客户入口链接</label>
+            <input id="enterUrl" class="input" type="text" value="https://shadow-pages.pages.dev/enter" />
+          </div>
+
+          <div class="btncol">
+            <button id="lockPack" class="btn btn--primary" type="button" disabled>确认并锁定表单</button>
+          </div>
+        </div>
       </div>
+
+      <!-- STEP 4 -->
+      <div class="step" id="step4">
+        <div class="step__head">
+          <div class="step__title">4）生成验证码</div>
+          <div class="step__sub">生成后自动拼接发送文案</div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="tokenOut">验证码</label>
+            <input id="tokenOut" class="input mono" type="text" readonly placeholder="生成后显示" />
+          </div>
+
+          <div class="btncol">
+            <button id="go" class="btn btn--primary" type="button" disabled>生成验证码</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="msgOut">发送给客户的文本</label>
+          <textarea id="msgOut" class="textarea mono" rows="6" readonly placeholder="生成后显示"></textarea>
+        </div>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="step" id="step5">
+        <div class="step__head">
+          <div class="step__title">5）复制</div>
+          <div class="step__sub">生成后才可复制</div>
+        </div>
+
+        <div class="grid2">
+          <button id="copyToken" class="btn btn--primary" type="button" disabled>复制验证码</button>
+          <button id="copyMsg" class="btn btn--primary" type="button" disabled>复制发送文案</button>
+        </div>
+
+        <div class="status" id="status">就绪</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 下半部分历史记录：你说不改动，这里保留你的原容器 -->
+      <section id="historySection">
+        <div class="historyTitle">历史已记录（仅本机）</div>
+        <div id="historyTableWrap"></div>
+      </section>
+
     </section>
-
-    <!-- 下半部分：发放历史 -->
-    <section class="panel">
-      <div class="panel__header">
-        <div class="panel__headerTitle">发放历史记录</div>
-        <div class="panel__headerActions">
-          <button id="exportHistory" class="btn btn--muted" type="button">导出（复制文本）</button>
-          <button id="clearHistory" class="btn btn--muted" type="button">清空</button>
-        </div>
-      </div>
-
-      <div class="tablewrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width: 240px;">验证码</th>
-              <th style="width: 220px;">发放日期</th>
-              <th>表单名称</th>
-              <th style="width: 120px;">版本号</th>
-              <th style="width: 100px;">操作</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody">
-            <tr><td colspan="5" class="muted">暂无记录</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 隐藏配置 -->
-    <input id="base" type="hidden" value="https://shadow-api.wuxiaofei1985.workers.dev" />
-
-    <!-- 文案模板 -->
-    <textarea id="msgTpl" class="sr-only">
-你好，这里是你的入口与验证码：
-
-入口链接：
-{link}
-
-验证码：
-{token}
-
-打开链接后输入验证码即可进入。
-    </textarea>
   </main>
 
   <script src="/assets/js/admin.js"></script>
