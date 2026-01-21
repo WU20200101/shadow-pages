@@ -43,25 +43,30 @@ let step = 0;
 let lockedPack = null;   // { display_name, form_key, form_version }
 let packsCache = [];     // 最近一次拉到的 active packs
 
+function safeDisable(id, disabled) {
+  const el = $(id);
+  if (el) el.disabled = !!disabled;
+}
+
 function applyGate() {
   // step 0
-  $("reloadPacks").disabled = !(step >= 1);
-  $("packSelect").disabled = !(step >= 1);
+  safeDisable("reloadPacks", !(step >= 1));
+  safeDisable("packSelect", !(step >= 1));
 
   // 锁定按钮：必须选到一个 pack（step>=2）
-  $("lockPack").disabled = !(step >= 2);
+  safeDisable("lockPack", !(step >= 2));
 
   // 生成按钮：必须锁定（step>=3）
-  $("go").disabled = !(step >= 3);
+  safeDisable("go", !(step >= 3));
 
   // 复制按钮：必须生成成功（step>=4）
-  $("copyToken").disabled = !(step >= 4);
-  $("copyMsg").disabled = !(step >= 4);
+  safeDisable("copyToken", !(step >= 4));
+  safeDisable("copyMsg", !(step >= 4));
 
   // 选择/刷新在锁定后不可操作
   if (step >= 3) {
-    $("reloadPacks").disabled = true;
-    $("packSelect").disabled = true;
+    safeDisable("reloadPacks", true);
+    safeDisable("packSelect", true);
   }
 }
 
@@ -70,18 +75,25 @@ function resetAfterKeyConfirm() {
   lockedPack = null;
   step = 1;
 
-  $("tokenOutInput").value = "";
-  $("msgOut").value = "";
-  $("formName").value = "";
-  $("formVersion").value = "";
+  const tokenEl = $("tokenOutInput");
+  const msgOutEl = $("msgOut");
+  const formNameEl = $("formName");
+  const formVerEl = $("formVersion");
+
+  if (tokenEl) tokenEl.value = "";
+  if (msgOutEl) msgOutEl.value = "";
+  if (formNameEl) formNameEl.value = "";
+  if (formVerEl) formVerEl.value = "";
 
   // packSelect 先清空占位
   const sel = $("packSelect");
-  sel.innerHTML = "";
-  const opt = document.createElement("option");
-  opt.value = "";
-  opt.textContent = "确认管理员密码后刷新列表";
-  sel.appendChild(opt);
+  if (sel) {
+    sel.innerHTML = "";
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "确认管理员密码后刷新列表";
+    sel.appendChild(opt);
+  }
 
   packsCache = [];
 
@@ -111,10 +123,11 @@ function getPackDisplayName(p) {
 }
 
 async function fetchPacks() {
-  const base = $("base").value.trim();
-  const adminKey = $("key").value;
+  const base = ($("base")?.value || "").trim();
+  const adminKey = $("key")?.value || "";
 
   if (!adminKey) throw new Error("管理员密码不能为空");
+  if (!base) throw new Error("Worker API Base 不能为空");
 
   const res = await fetch(`${base}/api/admin/packs`, {
     method: "GET",
@@ -138,6 +151,8 @@ function renderPacks(packs) {
   packsCache = packs;
 
   const sel = $("packSelect");
+  if (!sel) return;
+
   sel.innerHTML = "";
 
   if (!packs.length) {
@@ -145,8 +160,10 @@ function renderPacks(packs) {
     opt.value = "";
     opt.textContent = "（没有可用的 active 表单）";
     sel.appendChild(opt);
-    $("formName").value = "";
-    $("formVersion").value = "";
+
+    if ($("formName")) $("formName").value = "";
+    if ($("formVersion")) $("formVersion").value = "";
+
     step = Math.max(step, 1); // 仍停留在可刷新状态
     applyGate();
     return;
@@ -168,19 +185,21 @@ function applySelectedPack() {
   if (step < 1) return; // 未确认管理员密码，不允许选择
 
   const sel = $("packSelect");
+  if (!sel) return;
+
   const idx = Number(sel.value);
   const p = packsCache[idx];
 
   if (!p) {
-    $("formName").value = "";
-    $("formVersion").value = "";
+    if ($("formName")) $("formName").value = "";
+    if ($("formVersion")) $("formVersion").value = "";
     step = 1;
     applyGate();
     return;
   }
 
-  $("formName").value = getPackDisplayName(p) || "";
-  $("formVersion").value = getPackFormVersion(p) || "";
+  if ($("formName")) $("formName").value = getPackDisplayName(p) || "";
+  if ($("formVersion")) $("formVersion").value = getPackFormVersion(p) || "";
 
   // ✅ 选到表单才进入 step 2
   step = 2;
@@ -193,6 +212,8 @@ function lockCurrentPack() {
   if (step < 2) throw new Error("请先选择表单");
 
   const sel = $("packSelect");
+  if (!sel) throw new Error("packSelect 不存在");
+
   const idx = Number(sel.value);
   const p = packsCache[idx];
 
@@ -215,10 +236,11 @@ function lockCurrentPack() {
 /** ========== token ========== **/
 
 async function requestToken() {
-  const base = $("base").value.trim();
-  const adminKey = $("key").value;
+  const base = ($("base")?.value || "").trim();
+  const adminKey = $("key")?.value || "";
 
   if (!adminKey) throw new Error("管理员密码不能为空");
+  if (!base) throw new Error("Worker API Base 不能为空");
   if (step < 3 || !lockedPack) throw new Error("请先锁定表单");
 
   const res = await fetch(`${base}/api/admin/token`, {
@@ -247,7 +269,8 @@ async function requestToken() {
 /** ========== message ========== **/
 
 function buildMessage(link, token) {
-  const tpl = ($("msgTpl").value || "").trim() ||
+  const tplEl = $("msgTpl");
+  const tpl = (tplEl?.value || "").trim() ||
 `你好，这里是你的入口与验证码：
 
 入口链接：
@@ -341,31 +364,38 @@ function renderHistory() {
 /** ========== init ========== **/
 
 function initToggleKey() {
-  $("toggleKey").addEventListener("click", () => {
+  const btn = $("toggleKey");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
     const input = $("key");
+    if (!input) return;
     const isPwd = input.type === "password";
     input.type = isPwd ? "text" : "password";
-    $("toggleKey").textContent = isPwd ? "隐藏密码" : "显示密码";
+    btn.textContent = isPwd ? "隐藏密码" : "显示密码";
   });
 }
 
 function initConfirmKey() {
-  $("confirmKey").addEventListener("click", async () => {
-    const key = $("key").value;
+  const btn = $("confirmKey");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    const key = $("key")?.value || "";
     if (!key) {
       setStatus("请先输入管理员密码，再点击确认");
       return;
     }
-
-    // ✅ 只做“确认门槛”，不一定要立刻请求服务端
-    // 你要求：确认后才可刷新和选择
     resetAfterKeyConfirm();
     setStatus("管理员密码已确认：现在可以刷新列表并选择表单");
   });
 }
 
 function initReloadPacks() {
-  $("reloadPacks").addEventListener("click", async () => {
+  const btn = $("reloadPacks");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
     if (step < 1) {
       setStatus("请先确认管理员密码");
       return;
@@ -376,13 +406,16 @@ function initReloadPacks() {
       renderPacks(packs);
       setStatus("表单列表已加载：请选择表单，然后锁定");
     } catch (e) {
-      setStatus("表单列表加载失败：" + e.message);
+      setStatus("表单列表加载失败：" + (e?.message || e));
     }
   });
 }
 
 function initPackSelect() {
-  $("packSelect").addEventListener("change", () => {
+  const sel = $("packSelect");
+  if (!sel) return;
+
+  sel.addEventListener("change", () => {
     if (step < 1) return;
     if (step >= 3) return; // 锁定后不允许再变
     applySelectedPack();
@@ -390,36 +423,43 @@ function initPackSelect() {
 }
 
 function initLockPack() {
-  $("lockPack").addEventListener("click", () => {
+  const btn = $("lockPack");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
     try {
       lockCurrentPack();
     } catch (e) {
-      setStatus("锁定失败：" + e.message);
+      setStatus("锁定失败：" + (e?.message || e));
     }
   });
 }
 
 function initGenerate() {
-  $("go").addEventListener("click", async () => {
+  const btn = $("go");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
     if (step < 3) {
       setStatus("请先锁定表单");
       return;
     }
 
-    // 清空旧输出，回到 step 3（仍可生成）
-    $("tokenOutInput").value = "";
-    $("copyToken").disabled = true;
-    $("copyMsg").disabled = true;
+    // 清空旧输出
+    if ($("tokenOutInput")) $("tokenOutInput").value = "";
+    if ($("msgOut")) $("msgOut").value = "";
+    safeDisable("copyToken", true);
+    safeDisable("copyMsg", true);
 
     setStatus("生成中…");
 
     try {
       const token = await requestToken();
-      $("tokenOutInput").value = token;
+      if ($("tokenOutInput")) $("tokenOutInput").value = token;
 
-      const link = $("enterUrl").value.trim();
+      const link = ($("enterUrl")?.value || "").trim();
       const msg = buildMessage(link, token);
-      $("msgOut").value = msg;
+      if ($("msgOut")) $("msgOut").value = msg;
 
       // 默认：生成后立刻复制发送文案
       await copyToClipboard(msg);
@@ -438,51 +478,63 @@ function initGenerate() {
 
       setStatus("成功：已生成验证码并复制发送文案（历史已记录）");
     } catch (e) {
-      setStatus("失败：" + e.message);
+      setStatus("失败：" + (e?.message || e));
     }
   });
 }
 
 function initCopyButtons() {
-  $("copyToken").addEventListener("click", async () => {
-    if (step < 4) return;
-    const token = $("tokenOutInput").value.trim();
-    if (!token) return;
-    try {
-      await copyToClipboard(token);
-      setStatus("已复制验证码");
-    } catch (e) {
-      setStatus("复制失败：" + e.message);
-    }
-  });
+  const c1 = $("copyToken");
+  if (c1) {
+    c1.addEventListener("click", async () => {
+      if (step < 4) return;
+      const token = ($("tokenOutInput")?.value || "").trim();
+      if (!token) return;
+      try {
+        await copyToClipboard(token);
+        setStatus("已复制验证码");
+      } catch (e) {
+        setStatus("复制失败：" + (e?.message || e));
+      }
+    });
+  }
 
-  $("copyMsg").addEventListener("click", async () => {
-    if (step < 4) return;
-    const msg = $("msgOut").value;
-    if (!msg.trim()) return;
-    try {
-      await copyToClipboard(msg);
-      setStatus("已复制发送文案");
-    } catch (e) {
-      setStatus("复制失败：" + e.message);
-    }
-  });
+  const c2 = $("copyMsg");
+  if (c2) {
+    c2.addEventListener("click", async () => {
+      if (step < 4) return;
+      const msg = ($("msgOut")?.value || "");
+      if (!msg.trim()) return;
+      try {
+        await copyToClipboard(msg);
+        setStatus("已复制发送文案");
+      } catch (e) {
+        setStatus("复制失败：" + (e?.message || e));
+      }
+    });
+  }
 
-  $("exportHistory").addEventListener("click", async () => {
-    try {
-      const text = exportHistoryText();
-      await copyToClipboard(text);
-      setStatus("已复制：历史导出文本");
-    } catch (e) {
-      setStatus("复制失败：" + e.message);
-    }
-  });
+  const exp = $("exportHistory");
+  if (exp) {
+    exp.addEventListener("click", async () => {
+      try {
+        const text = exportHistoryText();
+        await copyToClipboard(text);
+        setStatus("已复制：历史导出文本");
+      } catch (e) {
+        setStatus("复制失败：" + (e?.message || e));
+      }
+    });
+  }
 
-  $("clearHistory").addEventListener("click", () => {
-    localStorage.removeItem(HISTORY_KEY);
-    renderHistory();
-    setStatus("历史已清空（仅本机）");
-  });
+  const clr = $("clearHistory");
+  if (clr) {
+    clr.addEventListener("click", () => {
+      localStorage.removeItem(HISTORY_KEY);
+      renderHistory();
+      setStatus("历史已清空（仅本机）");
+    });
+  }
 }
 
 (function boot() {
@@ -496,11 +548,13 @@ function initCopyButtons() {
 
   // 初始 pack 下拉占位
   const sel = $("packSelect");
-  sel.innerHTML = "";
-  const opt = document.createElement("option");
-  opt.value = "";
-  opt.textContent = "确认管理员密码后刷新列表";
-  sel.appendChild(opt);
+  if (sel) {
+    sel.innerHTML = "";
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "确认管理员密码后刷新列表";
+    sel.appendChild(opt);
+  }
 
   initToggleKey();
   initConfirmKey();
