@@ -9,9 +9,9 @@
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="topbar__title" id="topTitle">风险评估系统</div>
-  </header>
+  <div class="topbar">
+    <div class="topbar__title">输入验证码</div>
+  </div>
 
   <main class="container">
     <section class="panel">
@@ -21,12 +21,10 @@
       </div>
 
       <div class="panel__body">
-        <div class="field">
-          <label for="token">验证码</label>
-          <input id="token" type="text" placeholder="XXXX-XXXX" autocomplete="one-time-code" inputmode="latin"
-                 style="text-transform:uppercase" />
-          <div class="help">提示：验证码不区分大小写，会自动转为大写。</div>
-        </div>
+        <label class="label" for="token">验证码</label>
+        <input id="token" class="input" type="text" placeholder="XXXX-XXXX" autocomplete="off" />
+
+        <div class="help">提示：验证码不区分大小写，会自动转为大写。</div>
 
         <div class="actions">
           <button id="go" class="btn btn--primary" type="button">进入</button>
@@ -44,61 +42,52 @@
     const msg = document.getElementById("msg");
     const btn = document.getElementById("go");
 
-    const setMsg = (t) => { msg.textContent = t; };
-
+    // 自动大写
     tokenEl.addEventListener("input", () => {
-      // 自动大写 + 清理空格
-      tokenEl.value = (tokenEl.value || "").toUpperCase().replace(/\s+/g, "");
+      tokenEl.value = (tokenEl.value || "").toUpperCase();
     });
 
+    // 回车触发
     tokenEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter") btn.click();
     });
 
     btn.addEventListener("click", async () => {
       const token = (tokenEl.value || "").trim().toUpperCase();
-      if (!token) { setMsg("请输入验证码"); return; }
+      if (!token) { msg.textContent = "请输入验证码"; return; }
 
       btn.disabled = true;
-      setMsg("校验中…");
+      msg.textContent = "校验中…";
 
       try {
         const data = await apiPost("/api/enter", { token });
 
-        // used token -> 直接去结果页
+        // used -> 去结果页
         if (data?.status === "used" && data?.result_id) {
           window.location.href = `/result?rid=${encodeURIComponent(data.result_id)}`;
           return;
         }
 
-        // ok -> 进入填表
+        // ok -> 存储并进入 form
         if (data?.status === "ok" && data?.schema) {
           sessionStorage.setItem("token", token);
+
+          if (data?.display_name) {
+            sessionStorage.setItem("display_name", data.display_name);
+          }
+
           sessionStorage.setItem("enter_payload", JSON.stringify(data));
           window.location.href = "/form";
           return;
-          // 把中文表单名保存下来（供 form 页面显示）
-if (data?.display_name) sessionStorage.setItem("display_name", data.display_name);
-sessionStorage.setItem("enter_payload", JSON.stringify(data));
-}
-
-// 同步写回 enter_payload，保证 form 一定能读到
-try {
-  data.display_name = data.display_name || sessionStorage.getItem("display_name") || "";
-} catch {}
-
         }
 
-        setMsg("校验失败：返回数据异常");
+        msg.textContent = "校验失败：返回数据异常";
       } catch (e) {
-        setMsg(e?.message || "校验失败");
+        msg.textContent = (e?.message || "校验失败");
       } finally {
         btn.disabled = false;
       }
     });
-
-    // 初始聚焦
-    tokenEl.focus();
   </script>
 </body>
 </html>
