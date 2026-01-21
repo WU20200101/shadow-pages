@@ -30,7 +30,7 @@ body{
   letter-spacing:.3px;
   padding:0 12px;
   text-align:center;
-  font-size: 16px; /* 顶栏标题更大 */
+  font-size: 20px; /* 顶栏标题更大 */
 }
 
 .container{
@@ -60,7 +60,7 @@ body{
 }
 
 .panel__headerSub{
-  font-size: 13px; /* 副标题稍大 */
+  font-size: 14px; /* 副标题稍大 */
   color: var(--muted);
   line-height: 1.6;
 }
@@ -89,7 +89,7 @@ body{
 }
 
 .progress__text{
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 
@@ -108,7 +108,7 @@ body{
   background:#fff;
   color: var(--ink);
   font-weight:800;
-  font-size: 14px;
+  font-size: 17px;
   cursor:pointer;
   width: 100%;
 }
@@ -117,14 +117,14 @@ body{
 
 .status{
   margin-top: 10px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 
 /* 题目更大（你说读起来累） */
 .stepTitle{
   font-weight:800;
-  font-size: 16px;
+  font-size: 17px;
   margin-bottom: 10px;
   line-height: 1.45;
 }
@@ -137,7 +137,7 @@ body{
 /* 提示文更易读 */
 .help{
   margin-top: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   line-height: 1.7;
 }
@@ -151,7 +151,7 @@ body{
   background:#fff;
   color: var(--ink);
   outline:none;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.7;
 }
 textarea{ resize: vertical; min-height: 150px; }
@@ -187,7 +187,7 @@ textarea{ resize: vertical; min-height: 150px; }
   display:flex;
   justify-content:space-between;
   align-items:center;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 
