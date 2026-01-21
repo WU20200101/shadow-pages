@@ -9,9 +9,9 @@
 </head>
 
 <body>
-  <div class="topbar">
+  <header class="topbar">
     <div class="topbar__title">输入验证码</div>
-  </div>
+  </header>
 
   <main class="container">
     <section class="panel">
@@ -42,12 +42,10 @@
     const msg = document.getElementById("msg");
     const btn = document.getElementById("go");
 
-    // 自动大写
     tokenEl.addEventListener("input", () => {
       tokenEl.value = (tokenEl.value || "").toUpperCase();
     });
 
-    // 回车触发
     tokenEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter") btn.click();
     });
@@ -62,13 +60,11 @@
       try {
         const data = await apiPost("/api/enter", { token });
 
-        // used -> 去结果页
         if (data?.status === "used" && data?.result_id) {
           window.location.href = `/result?rid=${encodeURIComponent(data.result_id)}`;
           return;
         }
 
-        // ok -> 存储并进入 form
         if (data?.status === "ok" && data?.schema) {
           sessionStorage.setItem("token", token);
 
