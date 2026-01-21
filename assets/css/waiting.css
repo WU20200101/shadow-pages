@@ -1,0 +1,143 @@
+/* waiting page only */
+
+:root{
+  --ink:#111827;
+  --muted:#6B7280;
+  --bg:#F6F7F9;
+  --card:#FFFFFF;
+  --line:#E5E7EB;
+  --brand:#3F4654;   /* 你的深灰主色 */
+  --brand2:#2F3542;  /* 深一点用于 hover/层次 */
+  --radius:14px;
+}
+
+body{
+  background: var(--bg);
+}
+
+/* topbar */
+.topbar{
+  background: var(--brand);
+  color:#fff;
+  height:56px;
+  display:flex;
+  align-items:center;
+}
+.topbar__inner{
+  width:min(980px, calc(100% - 32px));
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.topbar__title{
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:.2px;
+}
+
+/* layout */
+.wrap{
+  width:min(980px, calc(100% - 32px));
+  margin:20px auto 40px;
+}
+.panel{
+  display:flex;
+  justify-content:center;
+}
+.card{
+  width: min(720px, 100%);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow:hidden;
+  box-shadow: 0 10px 30px rgba(17,24,39,.06);
+}
+.card__hd{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+}
+.card__title{
+  font-size:18px;
+  font-weight:800;
+  color:var(--ink);
+  line-height:1.2;
+}
+.card__sub{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:13px;
+}
+.card__bd{
+  padding:18px;
+}
+
+/* waiting block */
+.wait{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:14px;
+  padding:10px 0 2px;
+}
+
+.wait__meta{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.wait__count{
+  font-size:14px;
+  font-weight:700;
+  color:var(--ink);
+}
+
+.wait__hint{
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* spinner */
+.spinner{
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  border: 4px solid rgba(63,70,84,.18);
+  border-top-color: rgba(63,70,84,.95);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
+
+/* progress bar */
+.progress{
+  width: min(520px, 100%);
+  height:10px;
+  background: #EEF2F7;
+  border:1px solid #E3E8F0;
+  border-radius:999px;
+  overflow:hidden;
+}
+.progress__bar{
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg, var(--brand), var(--brand2));
+  border-radius:999px;
+  transition: width 3s linear;
+}
+
+/* small muted */
+.muted{ color: var(--muted); }
+.small{ font-size:12px; }
+
+/* mobile tweaks */
+@media (max-width: 480px){
+  .wrap{ width: calc(100% - 24px); }
+  .card__hd{ padding:16px; }
+  .card__bd{ padding:16px; }
+  .topbar__title{ font-size:15px; }
+}
