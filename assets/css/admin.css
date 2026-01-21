@@ -120,6 +120,10 @@ body{
   min-width: 0;
 }
 
+.row--key .spacer{
+  flex:0 0 12px;
+}
+
 #toggleKey {
   white-space: nowrap;
   position: static;
@@ -233,35 +237,6 @@ body{
 .tokenCell{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
-
-/* ===== fix: 管理员密码 输入框与显示密码按钮间距 ===== */
-.row.row--key{
-  display:flex !important;
-  align-items:center !important;
-}
-
-.row.row--key > #key{
-  flex:1 1 auto !important;
-  width:auto !important;
-  min-width:0 !important;
-}
-
-/* 不用 gap，直接用 margin 强行拉开 */
-.row.row--key > #toggleKey{
-  margin-left:12px !important;
-  white-space:nowrap !important;
-  position:static !important;
-}
-
-/* 如果某处给 input 写了 width:100% 或 block，强行解除 */
-#key.input{
-  width:auto !important;
-}
-
-.row--key .spacer{
-  flex:0 0 12px;
-}
-
 
 
 /* ✅ 手机端：变成纵向步骤（你截图那种） */
