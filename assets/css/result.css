@@ -136,7 +136,10 @@ body{ background: var(--bg); }
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
 /* misc */
-.muted{ color: var(--muted); }
+.muted{ 
+  color: var(--muted);
+  font-size:14px;
+}
 .pre{
   background:#F9FAFB;
   border:1px solid var(--line);
