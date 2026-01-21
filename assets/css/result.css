@@ -154,5 +154,5 @@ body{ background: var(--bg); }
 @media (max-width:480px){
   .wrap{ width: calc(100% - 24px); }
   .card{ padding:14px 14px; }
-  .topbar__title{ font-size:15px; }
+  .topbar__title{ font-size:20px; }
 }
