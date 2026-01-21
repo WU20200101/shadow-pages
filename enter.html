@@ -79,7 +79,7 @@
 
         msg.textContent = "校验失败：返回数据异常";
       } catch (e) {
-        msg.textContent = (e?.message || "校验失败");
+        msg.textContent = "验证失败：请联系系统管理员或重新购买产品。";
       } finally {
         btn.disabled = false;
       }
