@@ -123,11 +123,15 @@ body{
 }
 
 /* ✅ 用 margin-left 兜底（不依赖 gap） */
-#toggleKey{
-  margin-left:0px;      /* 你要更大就改这里 */
-  white-space:nowrap;
+#toggleKey{ 
+  margin-left:12px; 
+  white-space:nowrap; 
 }
 
+
+#confirmKey{
+  margin-top: 14px;
+}
 
 .row--two{
   display:grid;
