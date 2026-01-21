@@ -107,12 +107,22 @@ body{
   gap:12px;
   align-items:center;
 }
-.row--key{
-  align-items:stretch;
+/* 管理员密码：输入框 + 显示密码按钮 */
+.row--key {
+  display: flex;
+  align-items: center;
+  gap: 12px;              /* 👈 关键：这里补间距 */
 }
-.row--key .input{
-  flex:1;
+
+.row--key .input {
+  flex: 1;
+  min-width: 0;
 }
+
+.row--key .btn {
+  white-space: nowrap;   /* 防止「显示密码」被挤成两行 */
+}
+
 .row--two{
   display:grid;
   grid-template-columns: 1fr 1fr;
