@@ -11,25 +11,25 @@ function el(tag, attrs = {}, children = []) {
 
 function normStr(v){ return (v ?? "").toString(); }
 
-function stepCount(schema){
+function totalSteps(schema){
   const qs = schema?.questions || [];
-  return 2 + (Array.isArray(qs) ? qs.length : 0); // intro + disclaimer + questions
+  return 1 + (Array.isArray(qs) ? qs.length : 0); // 1=声明+免责声明合并页
 }
 
-function renderIntro(mount, displayName){
+/** Step 0：声明+简介+免责声明 合并页 */
+function renderIntroAndDisclaimer(mount, displayName, state){
   mount.innerHTML = "";
-  mount.appendChild(el("div", { class:"stepTitle", text:"声明与简介" }));
+
+  mount.appendChild(el("div", { class:"stepTitle", text:"声明与免责声明" }));
+
   mount.appendChild(el("div", { class:"help" }, [
     document.createTextNode(`${displayName} 用于“判断前校验”。请按直觉填写，不需要解释。`),
     el("br"),
-    document.createTextNode("系统只呈现结构化结果，不替你做决定。")
-  ]));
-}
-
-function renderDisclaimer(mount, state){
-  mount.innerHTML = "";
-  mount.appendChild(el("div", { class:"stepTitle", text:"免责声明" }));
-  mount.appendChild(el("div", { class:"help" }, [
+    document.createTextNode("系统只呈现结构化结果，不替你做决定。"),
+    el("br"),
+    el("br"),
+    document.createTextNode("免责声明："),
+    el("br"),
     document.createTextNode("1）本系统不提供行动建议，也不对任何结果负责。"),
     el("br"),
     document.createTextNode("2）你提交的信息将用于生成判断结果与结构化呈现。"),
@@ -44,16 +44,31 @@ function renderDisclaimer(mount, state){
 
   const row = el("div", { class:"choiceRow" }, [
     cb,
-    el("label", { for:id, text:"我已阅读并同意免责声明，继续填写" })
+    el("label", { for:id, text:"我已阅读并同意免责声明，开始填写" })
   ]);
+
   mount.appendChild(el("div", { style:"height:12px" }));
   mount.appendChild(row);
 }
 
 function renderQuestion(mount, q, answers){
   mount.innerHTML = "";
-  mount.appendChild(el("div", { class:"stepTitle", text: q.title || q.id || "" }));
+  mount.appendChild(el("div", { class:"stepTitle stepTitle--q", text: q.title || q.id || "" }));
 
+  // text：hint 作为 placeholder（不再单独占一行）
+  if (q.type === "text") {
+    const ta = el("textarea", {
+      rows:"6",
+      placeholder: q.hint ? normStr(q.hint) : "请输入",
+      class: "input"
+    });
+    ta.value = normStr(answers[q.id]);
+    ta.addEventListener("input", () => { answers[q.id] = ta.value; });
+    mount.appendChild(ta);
+    return;
+  }
+
+  // 非 text：如果有 hint，仍显示小字提示（不挤占输入区）
   if (q.hint) {
     mount.appendChild(el("div", { class:"help", text: q.hint }));
   }
@@ -138,23 +153,19 @@ function renderQuestion(mount, q, answers){
     return;
   }
 
-  // text
-  const ta = el("textarea", { rows:"4", placeholder: "请输入" });
-  ta.value = normStr(answers[q.id]);
-  ta.addEventListener("input", () => { answers[q.id] = ta.value; });
-  mount.appendChild(ta);
+  mount.appendChild(el("div", { class:"help", text:`未知题型：${q.type}` }));
 }
 
-function validateStep(schema, idx, state){
-  // idx: 0 intro, 1 disclaimer, >=2 questions
-  if (idx === 1) {
-    if (!state.agreed) return "请先阅读并勾选同意免责声明";
+function validateCurrent(schema, idx, state){
+  // idx=0：声明+免责声明合并页
+  if (idx === 0) {
+    if (!state.agreed) return "请先勾选同意免责声明";
     return null;
   }
-  if (idx < 2) return null;
 
+  // idx>=1：问题页（idx-1 对应 questions 下标）
   const questions = schema?.questions || [];
-  const q = questions[idx - 2];
+  const q = questions[idx - 1];
   if (!q || !q.required) return null;
 
   const v = state.answers[q.id];
@@ -173,7 +184,7 @@ function validateStep(schema, idx, state){
   return null;
 }
 
-// 把内存 answers 回灌成你原来的 DOM 结构，让 collectAnswers(schema, document) 能读
+// 回灌成你原 collectAnswers 能读取的 DOM 结构（submit.js 不动）
 function materialize(schema, answers, container){
   container.innerHTML = "";
 
@@ -189,12 +200,7 @@ function materialize(schema, answers, container){
 
       options.forEach((opt, idx) => {
         const id = `${name}_${idx}`;
-        const inputAttrs = {
-          type:"radio",
-          name,
-          id,
-          value: opt
-        };
+        const inputAttrs = { type:"radio", name, id, value: opt };
         if (q.required) inputAttrs.required = "required";
         const input = el("input", inputAttrs);
         if (answers[q.id] === opt) input.checked = true;
@@ -212,12 +218,7 @@ function materialize(schema, answers, container){
 
       options.forEach((opt, idx) => {
         const id = `${q.id}_${idx}`;
-        const input = el("input", {
-          type:"checkbox",
-          id,
-          value: opt,
-          "data-qid": q.id
-        });
+        const input = el("input", { type:"checkbox", id, value: opt, "data-qid": q.id });
         if (picked.includes(opt)) input.checked = true;
 
         const label = el("label", { for:id, class:"opt", text: opt });
@@ -231,21 +232,12 @@ function materialize(schema, answers, container){
       const max = String(q.max ?? 7);
       const v = (typeof answers[q.id] === "number") ? answers[q.id] : Number(min);
 
-      const input = el("input", {
-        type:"range",
-        min, max,
-        value: String(v),
-        "data-qid": q.id
-      });
+      const input = el("input", { type:"range", min, max, value: String(v), "data-qid": q.id });
       wrap.appendChild(el("div", { class:"q-body" }, [input]));
     }
 
     else if (q.type === "text") {
-      const textarea = el("textarea", {
-        rows:"3",
-        "data-qid": q.id,
-        placeholder: "可选填写"
-      });
+      const textarea = el("textarea", { rows:"3", "data-qid": q.id, placeholder:"可选填写" });
       textarea.value = normStr(answers[q.id] || "");
       wrap.appendChild(el("div", { class:"q-body" }, [textarea]));
     }
@@ -256,20 +248,15 @@ function materialize(schema, answers, container){
 
 export function createWizardDom({ mount, schema, displayName, setStatus, onUI }) {
   const questions = Array.isArray(schema?.questions) ? schema.questions : [];
-  const total = stepCount(schema); // intro + disclaimer + questions
-  const state = {
-    idx: 0,
-    agreed: false,
-    answers: {}
-  };
+  const total = totalSteps(schema);
+
+  const state = { idx: 0, agreed: false, answers: {} };
 
   const isLast = () => state.idx === total - 1;
 
   const progressText = () => {
-    // 0 intro, 1 disclaimer, 2..q
     if (state.idx === 0) return `步骤 1 / ${total}`;
-    if (state.idx === 1) return `步骤 2 / ${total}`;
-    return `问题 ${state.idx - 1} / ${questions.length}`;
+    return `问题 ${state.idx} / ${questions.length}`;
   };
 
   const progressRatio = () => {
@@ -281,27 +268,22 @@ export function createWizardDom({ mount, schema, displayName, setStatus, onUI })
 
   const render = () => {
     if (state.idx === 0) {
-      renderIntro(mount, displayName);
-      setStatus?.("阅读简介后点击「下一步」");
-    } else if (state.idx === 1) {
-      renderDisclaimer(mount, state);
-      setStatus?.("请勾选同意免责声明后继续");
+      renderIntroAndDisclaimer(mount, displayName, state);
+      setStatus?.("勾选同意后点击「下一步」开始填写");
     } else {
-      renderQuestion(mount, questions[state.idx - 2], state.answers);
+      renderQuestion(mount, questions[state.idx - 1], state.answers);
       setStatus?.("按直觉选择/填写，然后点击「下一步」");
     }
     onUI?.({ nextText: nextText(), progressText: progressText(), progressRatio: progressRatio() });
   };
 
   const next = () => {
-    const err = validateStep(schema, state.idx, state);
+    const err = validateCurrent(schema, state.idx, state);
     if (err) throw new Error(err);
 
     if (isLast()) {
-      // 最后一页：提交
       return { done: true, answers: state.answers };
     }
-
     state.idx += 1;
     render();
     return { done: false, answers: state.answers };
@@ -310,6 +292,5 @@ export function createWizardDom({ mount, schema, displayName, setStatus, onUI })
   const materializeTo = (container) => materialize(schema, state.answers, container);
 
   render();
-
   return { next, materializeTo };
 }
