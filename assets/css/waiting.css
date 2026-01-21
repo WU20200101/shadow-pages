@@ -31,7 +31,7 @@ body{
   justify-content:center;
 }
 .topbar__title{
-  font-size:16px;
+  font-size:20px;
   font-weight:700;
   letter-spacing:.2px;
 }
@@ -58,7 +58,7 @@ body{
   border-bottom:1px solid var(--line);
 }
 .card__title{
-  font-size:18px;
+  font-size:17px;
   font-weight:800;
   color:var(--ink);
   line-height:1.2;
@@ -66,7 +66,7 @@ body{
 .card__sub{
   margin-top:6px;
   color:var(--muted);
-  font-size:13px;
+  font-size:14px;
 }
 .card__bd{
   padding:18px;
@@ -89,13 +89,13 @@ body{
 }
 
 .wait__count{
-  font-size:14px;
+  font-size:17px;
   font-weight:700;
   color:var(--ink);
 }
 
 .wait__hint{
-  font-size:13px;
+  font-size:14px;
   color:var(--muted);
 }
 
@@ -132,7 +132,7 @@ body{
 
 /* small muted */
 .muted{ color: var(--muted); }
-.small{ font-size:12px; }
+.small{ font-size:14px; }
 
 /* mobile tweaks */
 @media (max-width: 480px){
