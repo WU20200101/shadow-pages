@@ -4,31 +4,65 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="/assets/css/base.css" />
+  <link rel="stylesheet" href="/assets/css/waiting.css" />
   <title>生成中…</title>
 </head>
 <body>
-  <div class="page">
-    <h2>正在生成判断结果</h2>
-    <p class="muted">
-      系统正在整理你的填写内容，请稍候…
-    </p>
-
-    <div style="margin-top:24px">
-      <p id="countdown" class="muted">预计等待 3 秒</p>
+  <!-- top bar -->
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="topbar__title">正在生成判断结果</div>
     </div>
-  </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="card">
+        <div class="card__hd">
+          <div class="card__title">请稍候</div>
+          <div class="card__sub">系统正在整理你的填写内容</div>
+        </div>
+
+        <div class="card__bd">
+          <div class="wait">
+            <div class="spinner" aria-hidden="true"></div>
+
+            <div class="wait__meta">
+              <div id="countdown" class="wait__count">预计等待 3 秒</div>
+              <div class="wait__hint">页面将自动跳转，无需操作。</div>
+            </div>
+
+            <div class="progress" aria-hidden="true">
+              <div id="bar" class="progress__bar"></div>
+            </div>
+
+            <div class="muted small">请不要刷新或返回上一页。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const rid = params.get("rid");
 
     if (!rid) {
-      document.body.innerHTML = "<p>缺少 result_id</p>";
+      document.body.innerHTML = '<div style="padding:20px">缺少 result_id</div>';
       throw new Error("missing rid");
     }
 
-    let remain = 3;
     const el = document.getElementById("countdown");
+    const bar = document.getElementById("bar");
+
+    const total = 3;
+    let remain = total;
+
+    // 初始化进度条（从 0 -> 100）
+    bar.style.width = "0%";
+    requestAnimationFrame(() => {
+      bar.style.width = "100%";
+    });
 
     const timer = setInterval(() => {
       remain--;
