@@ -112,6 +112,7 @@ body{
 .row--key{
   display:flex !important;
   align-items:center;
+  margin-bottom: 14px;
 }
 
 /* 输入框占满剩余空间 */
@@ -123,7 +124,7 @@ body{
 
 /* ✅ 用 margin-left 兜底（不依赖 gap） */
 #toggleKey{
-  margin-left:12px;      /* 你要更大就改这里 */
+  margin-left:0px;      /* 你要更大就改这里 */
   white-space:nowrap;
 }
 
