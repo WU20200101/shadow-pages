@@ -23,16 +23,16 @@ function renderIntroAndDisclaimer(mount, displayName, state){
   mount.appendChild(el("div", { class:"stepTitle", text:"声明与免责声明" }));
 
   mount.appendChild(el("div", { class:"help" }, [
-    document.createTextNode(`${displayName} 用于“判断前校验”。请按直觉填写，不需要解释。`),
+    document.createTextNode(`${displayName} 这是一次对当前决策环境的校验，按你的第一感觉填写就好，不用解释。`),
     el("br"),
-    document.createTextNode("系统只呈现结构化结果，不替你做决定。"),
+    document.createTextNode("这份结果只是帮你把现实情况理清楚，并不会暗示你该往哪走。决定权始终在你自己手里。"),
     el("br"),
     el("br"),
     document.createTextNode("免责声明："),
     el("br"),
-    document.createTextNode("1）本系统不提供行动建议，也不对任何结果负责。"),
+    document.createTextNode("1）本系统不提供行动建议，也不对任何现实结果负责。"),
     el("br"),
-    document.createTextNode("2）你提交的信息将用于生成判断结果与结构化呈现。"),
+    document.createTextNode("2）你填写的内容，将用于整理和呈现判断结果。"),
     el("br"),
     document.createTextNode("3）继续即表示你理解并同意以上内容。")
   ]));
