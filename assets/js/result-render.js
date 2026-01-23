@@ -36,7 +36,7 @@ export function renderResult(container, data) {
     if (!cards.length) {
       container.innerHTML = `
         <section class="card">
-          <p>当前判断尚未命中可呈现的结构性张力。</p>
+          <p>你现在的判断，暂时还没有被某一个问题明显拉扯住。</p>
         </section>
       `;
       return;
@@ -86,7 +86,7 @@ export function renderResult(container, data) {
   // =========================
   container.innerHTML = `
     <section class="card">
-      <p>当前判断尚未命中可呈现的结构性张力。</p>
+      <p>你现在的判断，暂时还没有被某一个问题明显拉扯住。</p>
     </section>
   `;
 }
