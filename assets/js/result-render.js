@@ -18,19 +18,19 @@ export function renderResult(container, data) {
     const cards = [];
 
     if (cr?.module1?.text) {
-      cards.push(card("模块 1｜当前判断状态的整体轮廓", [cr.module1.text]));
+      cards.push(card("一、你现在所处的判断状态，大致是这样的：", [cr.module1.text]));
     }
     if (cr?.module2?.text) {
-      cards.push(card("模块 2｜判断张力最大的集中点", [cr.module2.text]));
+      cards.push(card("二、现在最容易让你判断变得吃力的地方是：", [cr.module2.text]));
     }
     if (Array.isArray(cr?.module3?.list) && cr.module3.list.length) {
-      cards.push(cardList("模块 3｜当前仍未被确认的判断维度", cr.module3.list));
+      cards.push(cardList("三、下面这些地方，可能还需要你再看一眼：", cr.module3.list));
     }
     if (cr?.module4?.text) {
-      cards.push(card("模块 4｜判断边界声明", [cr.module4.text]));
+      cards.push(card("四、关于这份结果，你需要知道的几件事", [cr.module4.text]));
     }
     if (cr?.module5?.text) {
-      cards.push(card("模块 5｜使用方式说明", [cr.module5.text]));
+      cards.push(card("五、你可以怎么理解和使用这份结果", [cr.module5.text]));
     }
 
     if (!cards.length) {
