@@ -4,47 +4,53 @@ export function renderResult(container, data) {
 
   const cr = data?.client_result || {};
 
+  // ===== debug (一定要留着，定位缓存/数据) =====
+  console.log("[RESULT_RENDER] VERSION = 20260124_1");
+  try {
+    console.log("[RESULT_RENDER] client_result keys:", Object.keys(cr || {}));
+    console.log("[RESULT_RENDER] module3:", cr?.module3);
+    console.log("[RESULT_RENDER] module3.text:", cr?.module3?.text);
+  } catch (e) {
+    console.warn("[RESULT_RENDER] debug log failed:", e);
+  }
+
   // =========================
-  // 1) Preferred: module1-5 protocol output
+  // 1) Preferred: protocol output (module1-5)
   // =========================
-  const hasModules =
-    cr?.module1?.text ||
-    cr?.module2?.text ||
-    cr?.module3?.text ||
-    cr?.module4?.text ||
-    cr?.module5?.text;
+  const hasModules = ["module1", "module2", "module3", "module4", "module5"].some(
+    (k) => typeof cr?.[k]?.text === "string" && cr[k].text.trim()
+  );
 
   if (hasModules) {
+    const titleMap = {
+      module1: "一、你现在所处的判断状态，大致是这样的：",
+      module2: "二、现在最容易让你判断变得吃力的地方是：",
+      module3: "三、下面这些地方，可能还需要你再看一眼：",
+      module4: "四、关于这份结果，你需要知道的几件事",
+      module5: "五、你可以怎么理解和使用这份结果",
+    };
+
+    const order = ["module1", "module2", "module3", "module4", "module5"];
     const cards = [];
 
-    if (cr?.module1?.text) {
-      cards.push(card("你是否还能在关系中保持情绪的独立与稳定", [cr.module1.text]));
-    }
-    if (cr?.module2?.text) {
-      cards.push(card("你在这段关系中的付出是否已经明显失衡或透支", [cr.module2.text]));
-    }
-    if (cr?.module3?.text) {
-      cards.push(card("你对“被在意、被确认”的依赖程度", [cr.module3.text]));
-    }
-    if (cr?.module4?.text) {
-      cards.push(card("你是否还能在关系中使用、表达和维护自己的边界", [cr.module4.text]));
-    }
-    if (cr?.module5?.text) {
-      cards.push(card("情绪是否已经开始覆盖你的判断能力", [cr.module5.text]));
+    for (const k of order) {
+      const text = cr?.[k]?.text;
+
+      if (typeof text === "string" && text.trim()) {
+        cards.push(card(titleMap[k], [text]));
+      } else {
+        console.warn(`[RESULT_RENDER] skip ${k} because text=`, text);
+      }
     }
 
     if (!cards.length) {
-      container.innerHTML = `
-        <section class="card">
-          <p>你现在的判断，暂时还没有被某一个问题明显拉扯住。</p>
-        </section>
-      `;
+      container.innerHTML = emptyCard();
       return;
     }
 
     container.innerHTML = cards.join("");
 
-    // Optional meta (debug) - muted + safe
+    // meta line (debug)
     if (cr?.meta?.generated_at || cr?.meta?.engine) {
       const metaLine = [
         cr?.meta?.engine ? `engine: ${escapeHtml(cr.meta.engine)}` : null,
@@ -84,11 +90,7 @@ export function renderResult(container, data) {
   // =========================
   // 3) Nothing
   // =========================
-  container.innerHTML = `
-    <section class="card">
-      <p>你现在的判断，暂时还没有被某一个问题明显拉扯住。</p>
-    </section>
-  `;
+  container.innerHTML = emptyCard();
 }
 
 // ----- UI helpers -----
@@ -107,18 +109,10 @@ function card(title, paragraphs) {
   `;
 }
 
-function cardList(title, items) {
-  const t = escapeHtml(title || "");
-  const lis = (items || [])
-    .filter(Boolean)
-    .map((x) => `<li>${escapeHtml(x)}</li>`)
-    .join("");
+function emptyCard() {
   return `
     <section class="card">
-      ${t ? `<h3>${t}</h3>` : ""}
-      <ul class="result__list">
-        ${lis}
-      </ul>
+      <p>你现在的判断，暂时还没有被某一个问题明显拉扯住。</p>
     </section>
   `;
 }
