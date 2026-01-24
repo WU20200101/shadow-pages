@@ -23,11 +23,11 @@ export function renderResult(container, data) {
 
   if (hasModules) {
     const titleMap = {
-      module1: "一、你现在所处的判断状态，大致是这样的：",
-      module2: "二、现在最容易让你判断变得吃力的地方是：",
-      module3: "三、下面这些地方，可能还需要你再看一眼：",
-      module4: "四、关于这份结果，你需要知道的几件事",
-      module5: "五、你可以怎么理解和使用这份结果",
+      module1: "情绪稳定度",
+      module2: "关系投入度",
+      module3: "安全感",
+      module4: "边界感",
+      module5: "清醒度",
     };
 
     const order = ["module1", "module2", "module3", "module4", "module5"];
