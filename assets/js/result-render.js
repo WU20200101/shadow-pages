@@ -10,7 +10,7 @@ export function renderResult(container, data) {
   const hasModules =
     cr?.module1?.text ||
     cr?.module2?.text ||
-    cr?.module3?.text ||
+    (Array.isArray(cr?.module3?.list) && cr.module3.list.length) ||
     cr?.module4?.text ||
     cr?.module5?.text;
 
@@ -23,8 +23,8 @@ export function renderResult(container, data) {
     if (cr?.module2?.text) {
       cards.push(card("二、现在最容易让你判断变得吃力的地方是：", [cr.module2.text]));
     }
-    if (cr?.module3?.text) {
-      cards.push(card("三、下面这些地方，可能还需要你再看一眼：", [cr.module3.text]));
+    if (Array.isArray(cr?.module3?.list) && cr.module3.list.length) {
+      cards.push(cardList("三、下面这些地方，可能还需要你再看一眼：", cr.module3.list));
     }
     if (cr?.module4?.text) {
       cards.push(card("四、关于这份结果，你需要知道的几件事", [cr.module4.text]));
@@ -91,11 +91,6 @@ export function renderResult(container, data) {
   `;
 }
 
-        ${lis}
-      </ul>
-    </section>
-  `;
-}
 // ----- UI helpers -----
 
 function card(title, paragraphs) {
@@ -122,6 +117,11 @@ function cardList(title, items) {
     <section class="card">
       ${t ? `<h3>${t}</h3>` : ""}
       <ul class="result__list">
+        ${lis}
+      </ul>
+    </section>
+  `;
+}
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (m) => ({
