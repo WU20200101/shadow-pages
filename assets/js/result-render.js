@@ -1,3 +1,14 @@
+export function renderResult(container, data) {
+  container.innerHTML = "";
+
+  // ✅ 肉眼水印：只要你看不到，就说明你改的文件没运行
+  container.innerHTML = `<div style="position:fixed;bottom:8px;right:8px;z-index:9999;padding:6px 8px;background:#ff0066;color:#fff;font-size:12px;border-radius:8px;">RENDER_V20260124_01</div>` + container.innerHTML;
+
+  console.log("RENDER_V20260124_01", data?.client_result);
+  ...
+}
+
+
 // assets/js/result-render.js
 export function renderResult(container, data) {
   container.innerHTML = "";
