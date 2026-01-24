@@ -4,53 +4,47 @@ export function renderResult(container, data) {
 
   const cr = data?.client_result || {};
 
-  // ===== debug (一定要留着，定位缓存/数据) =====
-  console.log("[RESULT_RENDER] VERSION = 20260124_1");
-  try {
-    console.log("[RESULT_RENDER] client_result keys:", Object.keys(cr || {}));
-    console.log("[RESULT_RENDER] module3:", cr?.module3);
-    console.log("[RESULT_RENDER] module3.text:", cr?.module3?.text);
-  } catch (e) {
-    console.warn("[RESULT_RENDER] debug log failed:", e);
-  }
-
   // =========================
-  // 1) Preferred: protocol output (module1-5)
+  // 1) Preferred: module1-5 protocol output
   // =========================
-  const hasModules = ["module1", "module2", "module3", "module4", "module5"].some(
-    (k) => typeof cr?.[k]?.text === "string" && cr[k].text.trim()
-  );
+  const hasModules =
+    cr?.module1?.text ||
+    cr?.module2?.text ||
+    cr?.module3?.text ||
+    cr?.module4?.text ||
+    cr?.module5?.text;
 
   if (hasModules) {
-    const titleMap = {
-      module1: "情绪稳定度",
-      module2: "关系投入度",
-      module3: "安全感",
-      module4: "边界感",
-      module5: "清醒度",
-    };
-
-    const order = ["module1", "module2", "module3", "module4", "module5"];
     const cards = [];
 
-    for (const k of order) {
-      const text = cr?.[k]?.text;
-
-      if (typeof text === "string" && text.trim()) {
-        cards.push(card(titleMap[k], [text]));
-      } else {
-        console.warn(`[RESULT_RENDER] skip ${k} because text=`, text);
-      }
+    if (cr?.module1?.text) {
+      cards.push(card("一、你现在所处的判断状态，大致是这样的：", [cr.module1.text]));
+    }
+    if (cr?.module2?.text) {
+      cards.push(card("二、现在最容易让你判断变得吃力的地方是：", [cr.module2.text]));
+    }
+    if (cr?.module3?.text) {
+      cards.push(card("三、下面这些地方，可能还需要你再看一眼：", [cr.module3.text]));
+    }
+    if (cr?.module4?.text) {
+      cards.push(card("四、关于这份结果，你需要知道的几件事", [cr.module4.text]));
+    }
+    if (cr?.module5?.text) {
+      cards.push(card("五、你可以怎么理解和使用这份结果", [cr.module5.text]));
     }
 
     if (!cards.length) {
-      container.innerHTML = emptyCard();
+      container.innerHTML = `
+        <section class="card">
+          <p>你现在的判断，暂时还没有被某一个问题明显拉扯住。</p>
+        </section>
+      `;
       return;
     }
 
     container.innerHTML = cards.join("");
 
-    // meta line (debug)
+    // Optional meta (debug) - muted + safe
     if (cr?.meta?.generated_at || cr?.meta?.engine) {
       const metaLine = [
         cr?.meta?.engine ? `engine: ${escapeHtml(cr.meta.engine)}` : null,
@@ -90,9 +84,18 @@ export function renderResult(container, data) {
   // =========================
   // 3) Nothing
   // =========================
-  container.innerHTML = emptyCard();
+  container.innerHTML = `
+    <section class="card">
+      <p>你现在的判断，暂时还没有被某一个问题明显拉扯住。</p>
+    </section>
+  `;
 }
 
+        ${lis}
+      </ul>
+    </section>
+  `;
+}
 // ----- UI helpers -----
 
 function card(title, paragraphs) {
@@ -109,13 +112,16 @@ function card(title, paragraphs) {
   `;
 }
 
-function emptyCard() {
+function cardList(title, items) {
+  const t = escapeHtml(title || "");
+  const lis = (items || [])
+    .filter(Boolean)
+    .map((x) => `<li>${escapeHtml(x)}</li>`)
+    .join("");
   return `
     <section class="card">
-      <p>你现在的判断，暂时还没有被某一个问题明显拉扯住。</p>
-    </section>
-  `;
-}
+      ${t ? `<h3>${t}</h3>` : ""}
+      <ul class="result__list">
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (m) => ({
