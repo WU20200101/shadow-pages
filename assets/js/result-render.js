@@ -18,19 +18,19 @@ export function renderResult(container, data) {
     const cards = [];
 
     if (cr?.module1?.text) {
-      cards.push(card("一、你现在所处的判断状态，大致是这样的：", [cr.module1.text]));
+      cards.push(card("你是否还能在关系中保持情绪的独立与稳定", [cr.module1.text]));
     }
     if (cr?.module2?.text) {
-      cards.push(card("二、现在最容易让你判断变得吃力的地方是：", [cr.module2.text]));
+      cards.push(card("你在这段关系中的付出是否已经明显失衡或透支", [cr.module2.text]));
     }
     if (cr?.module3?.text) {
-      cards.push(card("三、下面这些地方，可能还需要你再看一眼：", [cr.module3.text]));
+      cards.push(card("你对“被在意、被确认”的依赖程度", [cr.module3.text]));
     }
     if (cr?.module4?.text) {
-      cards.push(card("四、关于这份结果，你需要知道的几件事", [cr.module4.text]));
+      cards.push(card("你是否还能在关系中使用、表达和维护自己的边界", [cr.module4.text]));
     }
     if (cr?.module5?.text) {
-      cards.push(card("五、你可以怎么理解和使用这份结果", [cr.module5.text]));
+      cards.push(card("情绪是否已经开始覆盖你的判断能力", [cr.module5.text]));
     }
 
     if (!cards.length) {
